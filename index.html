@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M-City Saloon</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d0f17;
+            --card: #161a29;
+            --card-light: #1f2438;
+            --purple: #6c5ce7;
+            --purple-glow: rgba(108, 92, 231, 0.3);
+            --green: #00b894;
+            --yellow: #f1c40f;
+            --red: #ff4757;
+            --text: #ffffff;
+            --text-muted: #8c9ba5;
+            --border: #252b40;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+
+        /* Top Navigation Bar */
+        .top-nav {
+            background: rgba(22, 26, 41, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand h1 {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            background: linear-gradient(45deg, #a29bfe, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand span {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: block;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            background: var(--card-light);
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .notif-badge {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            background: var(--red);
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            padding: 16px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Views */
+        .view-section {
+            display: none;
+        }
+        .view-section.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #dfe6e9;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .staff-picker {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .staff-chip {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 12px 6px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .staff-chip.selected {
+            background: var(--purple);
+            border-color: var(--purple);
+            box-shadow: 0 4px 12px var(--purple-glow);
+        }
+
+        .staff-chip .name {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .staff-chip .role {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .staff-chip.selected .role {
+            color: #dfe6e9;
+        }
+
+        .service-list {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 18px;
+            max-height: 280px;
+            overflow-y: auto;
+        }
+
+        .service-row {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .service-row:last-child {
+            border-bottom: none;
+        }
+
+        .service-row.selected {
+            background: rgba(108, 92, 231, 0.15);
+        }
+
+        .service-info .name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .service-info .meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .service-check {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: transparent;
+        }
+
+        .service-row.selected .service-check {
+            background: var(--purple);
+            border-color: var(--purple);
+            color: white;
+        }
+
+        .summary-bar {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .summary-item .label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .summary-item .val {
+            font-size: 16px;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        .input-group {
+            margin-bottom: 14px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .input-group input {
+            width: 100%;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: var(--purple);
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--purple);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px var(--purple-glow);
+        }
+
+        /* Dashboard Overview */
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .stat-card .lbl {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .stat-card .num {
+            font-size: 24px;
+            font-weight: 800;
+            margin-top: 4px;
+        }
+
+        .staff-earning-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .staff-earning-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .staff-earning-box .s-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .staff-earning-box .s-amt {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--green);
+            margin-top: 3px;
+        }
+
+        .dash-actions-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .pill-btn {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .pill-btn.active {
+            background: var(--purple);
+            border-color: var(--purple);
+            color: white;
+        }
+
+        /* Booking Cards */
+        .booking-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        .b-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .b-cust {
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .b-tag {
+            background: rgba(108, 92, 231, 0.2);
+            color: #a29bfe;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .b-service {
+            font-size: 13px;
+            color: #cbd5e1;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .b-timing {
+            font-size: 12px;
+            color: var(--yellow);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .b-footer {
+            border-top: 1px dashed var(--border);
+            padding-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .b-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--card-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .btn-cancel {
+            color: var(--red);
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="top-nav">
+        <div class="brand">
+            <h1>M-City Saloon</h1>
+            <span id="subHeaderStatus">স্মার্ট অনলাইন বুকিং</span>
+        </div>
+        <div class="nav-actions">
+            <!-- Mode Switch / Owner Pin Button -->
+            <button class="icon-btn" id="lockBtn" onclick="toggleStaffAccess()">
+                <i class="fas fa-lock" id="lockIcon"></i>
+            </button>
+            <button class="icon-btn" onclick="openNotifModal()">
+                <i class="fas fa-bell"></i>
+                <div class="notif-badge" id="badgeCount">0</div>
+            </button>
+        </div>
+    </div>
+
+    <!-- 1. কাস্টমার বুকিং স্ক্রিন (Default View) -->
+    <div class="view-section active" id="customerView">
+        <div class="container">
+            
+            <div class="section-title">
+                <i class="fas fa-user-scissors"></i> কারিগর নির্বাচন করুন
+            </div>
+            <div class="staff-picker" id="staffOptions"></div>
+
+            <div class="section-title">
+                <i class="fas fa-cut"></i> সার্ভিস বেছে নিন (একাধিক নিতে পারেন)
+            </div>
+            <div class="service-list" id="serviceOptions"></div>
+
+            <!-- Auto Duration & Total Summary -->
+            <div class="summary-bar">
+                <div class="summary-item">
+                    <div class="label">মোট সময়</div>
+                    <div class="val" style="color: var(--yellow);" id="totalDuration">0 মিনিট</div>
+                </div>
+                <div class="summary-item" style="text-align: right;">
+                    <div class="label">মোট মূল্য</div>
+                    <div class="val" style="color: var(--green);" id="totalPrice">₹0</div>
+                </div>
+            </div>
+
+            <div class="section-title">
+                <i class="fas fa-clock"></i> শুরুর সময় ও আপনার বিবরণ
+            </div>
+            <div class="input-group">
+                <label>বুকিং শুরুর সময়</label>
+                <input type="datetime-local" id="bookStartTime" required>
+            </div>
+            <div class="input-group">
+                <label>আপনার নাম</label>
+                <input type="text" id="custName" placeholder="কাস্টমারের নাম লিখুন" required>
+            </div>
+            <div class="input-group">
+                <label>মোবাইল নম্বর</label>
+                <input type="tel" id="custPhone" placeholder="১০ সংখ্যার মোবাইল নম্বর" required>
+            </div>
+
+            <button class="btn-primary" onclick="submitCustomerBooking()">
+                <i class="fas fa-calendar-check"></i> বুকিং নিশ্চিত করুন
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. দোকান ও স্টাফ ড্যাশবোর্ড স্ক্রিন (Protected View) -->
+    <div class="view-section" id="staffView">
+        <div class="container">
+            
+            <!-- Overall Stats -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="lbl">মোট বুকিং সংখ্যা</div>
+                    <div class="num" id="statTotalBookings">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="lbl">মোট আনুমানিক বিল</div>
+                    <div class="num" style="color: var(--green);" id="statTotalSales">₹0</div>
+                </div>
+            </div>
+
+            <!-- Staff Earnings Breakdown -->
+            <div class="staff-earning-grid" id="staffEarnings"></div>
+
+            <!-- Filter and Edit Staff -->
+            <div class="dash-actions-row">
+                <button class="pill-btn active" onclick="filterStaff('All', this)">সব বুকিং</button>
+                <button class="pill-btn" id="fBtn1" onclick="filterStaff('staff1', this)">কারিগর ১</button>
+                <button class="pill-btn" id="fBtn2" onclick="filterStaff('staff2', this)">কারিগর ২</button>
+                <button class="pill-btn" id="fBtn3" onclick="filterStaff('staff3', this)">কারিগর ৩</button>
+                <button class="pill-btn" style="background: #2d3436; color: var(--yellow);" onclick="openStaffEditModal()">
+                    <i class="fas fa-user-edit"></i> কারিগর এডিট
+                </button>
+            </div>
+
+            <!-- Booking Cards Container -->
+            <div id="staffBookingsList"></div>
+        </div>
+    </div>
+
+    <!-- Staff Edit Modal -->
+    <div class="modal" id="staffEditModal">
+        <div class="modal-box">
+            <div class="modal-title">
+                <span>কারিগরদের নাম পরিবর্তন করুন</span>
+                <i class="fas fa-times" style="cursor:pointer;" onclick="closeModal('staffEditModal')"></i>
+            </div>
+            <div class="input-group">
+                <label>১ম কারিগরের নাম</label>
+                <input type="text" id="editStaff1">
+            </div>
+            <div class="input-group">
+                <label>২য় কারিগরের নাম</label>
+                <input type="text" id="editStaff2">
+            </div>
+            <div class="input-group">
+                <label>৩য় কারিগরের নাম</label>
+                <input type="text" id="editStaff3">
+            </div>
+            <button class="btn-primary" onclick="saveStaffNames()">সংরক্ষণ করুন</button>
+        </div>
+    </div>
+
+    <!-- Notification Modal -->
+    <div class="modal" id="notifModal">
+        <div class="modal-box">
+            <div class="modal-title">
+                <span>নোটিফিকেশন অ্যালার্ট</span>
+                <i class="fas fa-times" style="cursor:pointer;" onclick="closeModal('notifModal')"></i>
+            </div>
+            <div id="notifList" style="max-height: 250px; overflow-y:auto; font-size:13px;"></div>
+            <button class="btn-primary" style="background:#485460; margin-top: 15px;" onclick="clearNotifs()">মুছে ফেলুন</button>
+        </div>
+    </div>
+
+    <script>
+        // ২০টি নির্দিষ্ট সার্ভিস তালিকা ও সময়
+        const SERVICES = [
+            { id: 1, name: "১. স্পেশাল চুল", price: 80, time: 30 },
+            { id: 2, name: "২. চুল", price: 60, time: 17 },
+            { id: 3, name: "৩. নরমাল চুল", price: 50, time: 15 },
+            { id: 4, name: "৪. দাড়ি সেভ", price: 50, time: 13 },
+            { id: 5, name: "৫. নরমাল দাড়ি সেভ", price: 30, time: 7 },
+            { id: 6, name: "৬. জিলেট ফোম", price: 50, time: 13 },
+            { id: 7, name: "৭. ভিজন ফোম", price: 50, time: 13 },
+            { id: 8, name: "৮. নরমাল ফোম", price: 40, time: 10 },
+            { id: 9, name: "৯. চুল ওয়াশ করা", price: 40, time: 5 },
+            { id: 10, name: "১০. নরমাল ক্রিম দাড়ি", price: 30, time: 10 },
+            { id: 11, name: "১১. নরমাল ওয়াশ মাসাজ ক্রিম", price: 50, time: 7 },
+            { id: 12, name: "১২. নরমাল স্ক্রাব ওয়াশ", price: 50, time: 7 },
+            { id: 13, name: "১৩. ট্যান ক্লিয়ার ওয়াশ", price: 130, time: 15 },
+            { id: 14, name: "১৪. লিলিইয়াম স্ক্রাব", price: 100, time: 10 },
+            { id: 15, name: "১৫. গোদরেজ ব্ল্যাক কালার", price: 60, time: 5 },
+            { id: 16, name: "১৬. নেশা ব্ল্যাক কালার", price: 60, time: 5 },
+            { id: 17, name: "১৭. নেশা বারগেন্ডি কালার", price: 70, time: 5 },
+            { id: 18, name: "১৮. হাইলাইট (ক্যাপ ২৩০ / স্ট্রিক ৩০)", price: 80, time: 5 },
+            { id: 19, name: "১৯. সিলভার/গ্রিন (ক্যাপ ৪০০ / স্ট্রিক ৮০)", price: 150, time: 15 },
+            { id: 20, name: "২০. চুল স্ট্রেইট", price: 1400, time: 120 }
+        ];
+
+        let staffList = JSON.parse(localStorage.getItem('mcity_staff')) || ['Dev', 'Rana', 'Surjo'];
+        let bookings = JSON.parse(localStorage.getItem('mcity_bookings')) || [];
+        let notifs = JSON.parse(localStorage.getItem('mcity_notifs')) || [];
+        let alertedIds = JSON.parse(localStorage.getItem('mcity_alerted')) || [];
+
+        let selectedStaff = staffList[0];
+        let selectedServices = [];
+     
