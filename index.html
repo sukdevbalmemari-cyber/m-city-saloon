@@ -919,7 +919,7 @@
             });
         }
 
-       function deleteEntry(id) {
+function deleteEntry(id) {
             if (!currentUser || currentUser.role !== 'admin') return;
             todayEntries = todayEntries.filter(x => x.id !== id);
             localStorage.setItem('salon_records_' + activeDateKey, JSON.stringify(todayEntries));
@@ -929,9 +929,10 @@
             }
             
             calculateAndRenderAll();
-        } 
+        }       
+         
         
-        }
+        
 
         function sendDailySummaryReport(ownerPhoneNo) {
             if (!ownerPhoneNo) return alert("মালিকের হোয়াটসঅ্যাপ নম্বর দিন!");
