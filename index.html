@@ -25,7 +25,7 @@
   <!-- ================= ০. স্প্ল্যাশ স্ক্রিন ================= -->
   <div id="splashScreen" class="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 transition-opacity duration-500">
     <div class="max-w-xs px-6 text-center splash-logo-anim">
-      <img src="https://raw.githubusercontent.com/sukdevbalmemari-cyber/m-city-saloon/main/logo.png" 
+      <img src="https://raw.githubusercontent.com/sukdevbalmemari-cyber/m-city-saloon/main/watermarked_img_11977197388237129701.png" 
            alt="M.city STYLE SALOON Logo" 
            class="w-full h-auto drop-shadow-[0_10px_25px_rgba(217,119,6,0.3)] mx-auto rounded-lg"
            onerror="this.style.display='none'; document.getElementById('altLogoText').classList.remove('hidden');">
@@ -1373,7 +1373,195 @@
       document.getElementById('repAttAbsent').textContent = absent;
 
       document.getElementById('monthlyReportResult').classList.remove('hidden');
+    }// ১. স্টাফ কর্তৃক অগ্রিম টাকার রিকোয়েস্ট পাঠানোর ফাংশন
+function requestAdvancePayment(staffName, amount) {
+    let advanceRequests = JSON.parse(localStorage.getItem('pendingAdvances')) || [];
+    
+    let newRequest = {
+        id: Date.now(),
+        staff: staffName,
+        amount: parseFloat(amount),
+        status: 'Pending', // মালিকের অনুমোদনের অপেক্ষায়
+        date: new Date().toLocaleDateString()
+    };
+
+    advanceRequests.push(newRequest);
+    localStorage.setItem('pendingAdvances', JSON.stringify(advanceRequests));
+    alert('অগ্রিম টাকার রিকোয়েস্ট সফলভাবে পাঠানো হয়েছে! মালিকের অনুমোদনের জন্য অপেক্ষা করুন।');
+}
+
+// ২. মালিক কর্তৃক রিকোয়েস্ট কনফার্ম বা অনুমোদন করার ফাংশন
+function approveAdvancePayment(requestId) {
+    let advanceRequests = JSON.parse(localStorage.getItem('pendingAdvances')) || [];
+    let approvedList = JSON.parse(localStorage.getItem('approvedAdvances')) || [];
+
+    let index = advanceRequests.findIndex(req => req.id === requestId);
+    if (index !== -1) {
+        let req = advanceRequests[index];
+        req.status = 'Approved';
+        
+        approvedList.push(req);
+        advanceRequests.splice(index, 1);
+
+        localStorage.setItem('pendingAdvances', JSON.stringify(advanceRequests));
+        localStorage.setItem('approvedAdvances', JSON.stringify(approvedList));
+        
+        alert(req.staff + " -এর " + req.amount + " টাকা অগ্রিম সফলভাবে অনুমোদিত ও যুক্ত হয়েছে!");
     }
-  </script>
+} // ৩. কারিগরদের আলাদা হিসাব ও অটো-পার্সেন্টেজ (Fixed & 50-50) ক্যালকুলেশন
+function calculateStaffEarnings(staffName, totalServiceAmount, contractType) {
+    let staffShare = 0;
+    let saloonShare = 0;
+
+    if (contractType === '50-50') {
+        staffShare = totalServiceAmount * 0.50;
+        saloonShare = totalServiceAmount * 0.50;
+    } else if (contractType === 'fixed') {
+        staffShare = parseFloat(contractTypeAmount) || 0; 
+        saloonShare = totalServiceAmount - staffShare;
+    }
+
+    let staffAccount = {
+        staff: staffName,
+        totalCollection: totalServiceAmount,
+        earned: staffShare,
+        saloonPart: saloonShare,
+        date: new Date().toLocaleDateString()
+    };
+
+    let allSaloonAccounts = JSON.parse(localStorage.getItem('saloonAccounts')) || [];
+    allSaloonAccounts.push(staffAccount);
+    localStorage.setItem('saloonAccounts', JSON.stringify(allSaloonAccounts));
+
+    return staffAccount;
+} // ১. কারিগরদের তথ্য ও ফোন নম্বর লোকাল স্টোরেজে সেভ করার ফাংশন
+function saveStaffDetails(staffId, staffName, phoneNo, contractType) {
+    let staffList = JSON.parse(localStorage.getItem('staffDetailsList')) || [];
+    
+    let staffObj = {
+        id: staffId || Date.now(),
+        name: staffName,
+        phone: phoneNo,
+        contract: contractType // '50-50' বা 'fixed'
+    };
+
+    // যদি আগে থেকেই থাকে তবে আপডেট হবে, না হলে নতুন যোগ হবে
+    let existingIndex = staffList.findIndex(s => s.name === staffName);
+    if (existingIndex !== -1) {
+        staffList[existingIndex] = staffObj;
+    } else {
+        staffList.push(staffObj);
+    }
+
+    localStorage.setItem('staffDetailsList', JSON.stringify(staffList));
+    alert(staffName + "-এর তথ্য ও ফোন নম্বর সফলভাবে সেভ করা হয়েছে!");
+}
+
+// ২. নির্দিষ্ট কারিগরকে সিলেক্ট করে তার হোয়াটসঅ্যাপ নম্বরে হিসাব পাঠানোর ফাংশন
+function sendReportToStaff(staffName, totalAmount, saloonPart, staffPart) {
+    let staffList = JSON.parse(localStorage.getItem('staffDetailsList')) || [];
+    let staff = staffList.find(s => s.name === staffName);
+
+    if (!staff || !staff.phone) {
+        alert("এই কারিগরের কোনো ফোন নম্বর সেভ করা নেই! আগে ফোন নম্বর এডিট অপশনে গিয়ে সেভ করুন।");
+        return;
+    }
+
+    let message = `Hello ${staffName},\nআজকের কাজের হিসাব:\nমোট কালেকশন: ₹${totalAmount}\nআপনার পাওনা: ₹${staffPart}\nসেলুনের অংশ: ₹${saloonPart}\nধন্যবাদ! - M.city STYLE SALOON`;
+    
+    let encodedMessage = encodeURIComponent(message);
+    let whatsappURL = `https://wa.me/${staff.phone}?text=${encodedMessage}`;
+    
+    window.open(whatsappURL, '_blank');
+} // সারাদিনের মোট কাজের দৈনিক রিপোর্ট তৈরি ও পাঠানোর ফাংশন
+function sendDailySummaryReport(ownerPhoneNo) {
+    let allAccounts = JSON.parse(localStorage.getItem('saloonAccounts')) || [];
+    let todayDate = new Date().toLocaleDateString();
+    
+    let totalDayCollection = 0;
+    let totalSaloonShare = 0;
+    let totalStaffShare = 0;
+    let workDetailsSummary = "";
+
+    // আজকের ডেটের হিসাবগুলো যোগ করা
+    allAccounts.forEach((acc, index) => {
+        if (acc.date === todayDate) {
+            totalDayCollection += parseFloat(acc.totalCollection || 0);
+            totalSaloonShare += parseFloat(acc.saloonPart || 0);
+            totalStaffShare += parseFloat(acc.earned || 0);
+            workDetailsSummary += `${index + 1}. ${acc.staff}: মোট ₹${acc.totalCollection} (সেলুন: ₹${acc.saloonPart}, কারিগর: ₹${acc.earned})\n`;
+        }
+    });
+
+    if (totalDayCollection === 0) {
+        alert("আজকের দিনে এখনো কোনো হিসাব সেভ করা হয়নি!");
+        return;
+    }
+
+    let summaryMessage = `📊 *M.city STYLE SALOON - দৈনিক হিসাব রিপোর্ট* 📊\nতারিখ: ${todayDate}\n\n` +
+                         `💼 কাজের বিবরণ:\n${workDetailsSummary}\n` +
+                         `-----------------------------------\n` +
+                         `💰 মোট সারাদিনের কালেকশন: ₹${totalDayCollection}\n` +
+                         `🏢 সেলুনের মোট আয়: ₹${totalSaloonShare}\n` +
+                         `👨‍🦰 কারিগরদের মোট পাওনা: ₹${totalStaffShare}\n` +
+                         `-----------------------------------\n` +
+                         `ধন্যবাদ! - M.city STYLE SALOON`;
+
+    let encodedMessage = encodeURIComponent(summaryMessage);
+    let whatsappURL = `https://wa.me/${ownerPhoneNo}?text=${encodedMessage}`;
+    
+    // মালিকের হোয়াটসঅ্যাপে সারাদিনের রিপোর্ট পাঠিয়ে দেওয়া
+    window.open(whatsappURL, '_blank');
+}
+   <!-- M.city STYLE SALOON - হিসাব ও হোয়াটসঅ্যাপ রিপোর্ট প্যানেল -->
+<div class="max-w-4xl mx-auto p-6 bg-slate-800 border border-slate-700 shadow-lg rounded-xl mt-6 mb-10">
+    <h2 class="text-xl font-bold text-center text-amber-400 mb-6">হিসাব ও হোয়াটসঅ্যাপ রিপোর্ট প্যানেল</h2>
+
+    <!-- ১. নতুন কাজের হিসাব যোগ করার ফর্ম -->
+    <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 mb-6">
+        <h3 class="text-sm font-semibold text-slate-300 mb-3">নতুন কাজের হিসাব যোগ করুন</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <input type="text" id="inputStaffName" placeholder="কারিগর/স্টাফের নাম" class="bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200">
+            <input type="number" id="inputServiceAmount" placeholder="মোট কাজের টাকা (₹)" class="bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200">
+            <select id="inputContractType" class="bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200">
+                <option value="50-50">৫০-৫০ (50-50 Split)</option>
+                <option value="fixed">ফিক্সড/চুক্তিভিত্তিক (Fixed)</option>
+            </select>
+        </div>
+        <button onclick="addNewServiceAccount()" class="bg-amber-500 text-slate-900 font-bold px-4 py-2.5 rounded-lg hover:bg-amber-400 w-full text-sm">হিসাব সেভ করুন</button>
+    </div>
+<!-- হাফ-দিন চেক বক্স -->
+<div class="flex items-center gap-2 mt-3 mb-3">
+    <input type="checkbox" id="isHalfDay" class="w-4 h-4 text-amber-500 bg-slate-800 border-slate-700 rounded">
+    <label for="isHalfDay" class="text-sm text-slate-300">এটি কি হাফ-দিনের (Half-day) হিসাব?</label>
+</div>    
+         <!-- ২. হোয়াটসঅ্যাপ রিপোর্ট পাঠানোর সেকশন -->
+    <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+            <h3 class="text-sm font-semibold text-slate-300">দৈনিক রিপোর্ট ও হোয়াটসঅ্যাপ</h3>
+            <p class="text-xs text-slate-400">সারাদিনের মোট কাজের হিসাব এক ক্লিকে আপনার নম্বরে পাঠান।</p>
+        </div>
+        <input type="text" id="ownerWhatsAppNo" placeholder="মালিকের হোয়াটসঅ্যাপ নম্বর (যেমন: 919876543210)" class="bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 w-full md:w-auto">
+        <button onclick="sendDailySummaryReport(document.getElementById('ownerWhatsAppNo').value)" class="bg-green-600 text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-green-500 w-full md:w-auto text-sm">সারাদিনের রিপোর্ট পাঠান</button>
+    </div>
+</div>
+
+<script>
+function addNewServiceAccount() {
+    let name = document.getElementById('inputStaffName').value;
+    let amount = document.getElementById('inputServiceAmount').value;
+    let contract = document.getElementById('inputContractType').value;
+
+    if (!name || !amount) {
+        alert("দয়া করে কারিগরের নাম এবং টাকার পরিমাণ সঠিকভাবে লিখুন!");
+        return;
+    }
+
+    calculateStaffEarnings(name, amount, contract);
+    alert(name + " -এর হিসাব সফলভাবে সেভ করা হয়েছে!");
+      document.getElementById('inputStaffName').value = '';
+      document.getElementById('inputServiceAmount').value = '';
+}
+   </script>
 </body>
 </html>
