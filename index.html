@@ -519,7 +519,13 @@
     let db = null;
     try {
       const firebaseConfig = {
-        databaseURL: "https://mcity-style-saloon-default-rtdb.firebaseio.com"
+        apiKey: "AIzaSyBiI1CYMQGVEAURU14sGGbCDvEG0fM8vXA",
+    authDomain: "mcity-saloon.firebaseapp.com",
+    databaseURL: "https://mcity-saloon-default-rtdb.firebaseio.com",
+    projectId: "mcity-saloon",
+    storageBucket: "mcity-saloon.firebasestorage.app",
+    messagingSenderId: "122682924971",
+    appId: "1:122682924971:web:d016dd8cff541a65bf7cee"
       };
       if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
       db = firebase.database();
