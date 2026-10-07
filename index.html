@@ -919,11 +919,18 @@
             });
         }
 
-        function deleteEntry(id) {
+       function deleteEntry(id) {
             if (!currentUser || currentUser.role !== 'admin') return;
             todayEntries = todayEntries.filter(x => x.id !== id);
             localStorage.setItem('salon_records_' + activeDateKey, JSON.stringify(todayEntries));
+            
+            if (db) {
+                db.ref(`records/${activeDateKey}/${id}`).remove();
+            }
+            
             calculateAndRenderAll();
+        } 
+        
         }
 
         function sendDailySummaryReport(ownerPhoneNo) {
