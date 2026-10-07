@@ -554,7 +554,21 @@
                 const upiWork = todayEntries.filter(e => e.type === 'service' && e.staffId === st.id && e.method === 'UPI').reduce((s, e) => s + e.amount, 0);
                 const drawerExpenses = todayEntries.filter(e => e.type === 'expense' && e.source === `drawer_${st.id}`).reduce((s, e) => s + e.amount, 0);
                 const drawerAdvances = todayEntries.filter(e => e.type === 'advance' && e.source === `drawer_${st.id}`).reduce((s, e) => s + e.amount, 0);
-                const currentDrawerCash = (opening + cashWork) - (drawerExpenses + drawerAdvances);
+               const totalStaffAdvance = Object.keys(localStorage)
+            .filter(key => key.startsWith('salon_records_'))
+            .reduce((total, key) => {
+                try {
+                    const records = JSON.parse(localStorage.getItem(key)) || [];
+                    const dayAdv = records
+                        .filter(e => e.type === 'advance' && e.staffId === st.id)
+                        .reduce((sum, e) => sum + e.amount, 0);
+                    return total + dayAdv;
+                } catch (err) {
+                    return total;
+                }
+            }, 0);
+            
+        const currentDrawerCash = (opening + cashWork) - (drawerExpenses + totalStaffAdvance);
 
                 container.innerHTML += `
                     <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl shadow space-y-3">
