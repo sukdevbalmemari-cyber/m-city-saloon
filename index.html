@@ -825,31 +825,34 @@
             });
         }
 
-        function approveAdvanceRequest(id) {
-            const req = pendingRequests.find(r => r.id === id);
-            if (!req) return;
-
-            const newAdv = {
-                id: 'rec_' + Date.now(),
-                type: 'advance',
-                staffId: req.staffId,
-                amount: req.amount,
-                source: req.source,
-                time: req.time
-            };
-
-            todayEntries.push(newAdv);
-            localStorage.setItem('salon_records_' + activeDateKey, JSON.stringify(todayEntries));
-            if (db) {
-                db.ref(`records/${activeDateKey}/${newAdv.id}`).set(newAdv);
-                db.ref(`advance_requests/${id}`).remove();
-            }
-            pendingRequests = pendingRequests.filter(r => r.id !== id);
-            renderPendingRequests();
-            calculateAndRenderAll();
-            alert('অগ্রিম রিকোয়েস্ট সফলভাবে এপ্রুভ করা হয়েছে!');
-        }
-
+       function approveAdvanceRequest(id) {
+    const req = pendingRequests.find(r => r.id === id);
+    if (!req) return;
+    
+    const newAdv = {
+        id: 'rec_' + Date.now(),
+        type: 'advance',
+        staffId: req.staffId,
+        amount: req.amount,
+        source: req.source,
+        time: req.time
+    };
+    
+    todayEntries.push(newAdv);
+    localStorage.setItem('salon_records_' + activeDateKey, JSON.stringify(todayEntries));
+    
+    if (db) {
+        db.ref(`records/${activeDateKey}/${newAdv.id}`).set(newAdv);
+        db.ref(`advance_requests/${id}`).remove();
+    }
+    
+    pendingRequests = pendingRequests.filter(r => r.id !== id);
+    renderPendingRequests();
+    
+    if (typeof calculateAndRenderAll === 'function') calculateAndRenderAll();
+    
+    alert('অগ্রিম রিকোয়েস্ট সফলভাবে এপ্রুভ করা হয়েছে!');
+}
         function rejectAdvanceRequest(id) {
             if (db) db.ref(`advance_requests/${id}`).remove();
             pendingRequests = pendingRequests.filter(r => r.id !== id);
