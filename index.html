@@ -686,7 +686,7 @@
 
             displayStaff.forEach(st => {
                 const totalWork = todayEntries.filter(e => e.type === 'service' && e.staffId === st.id).reduce((s, e) => s + e.amount, 0);
-                const totalAdvance = todayEntries.filter(e => e.type === 'advance' && e.staffId === st.id).reduce((s, e) => s + e.amount, 0);
+        const totalAdvance = todayEntries.filter(e => e.type === 'advance' && (e.staffId === st.id || e.source === 'drawer_' + st.id)).reduce((s, e) => s + e.amount, 0);
                 const currentAtt = staffAttendance[st.id] || 'full';
                 let payoutText = '';
 
