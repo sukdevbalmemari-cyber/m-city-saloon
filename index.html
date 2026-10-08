@@ -686,8 +686,16 @@
 
             displayStaff.forEach(st => {
                 const totalWork = todayEntries.filter(e => e.type === 'service' && e.staffId === st.id).reduce((s, e) => s + e.amount, 0);
-                const totalAdvance = todayEntries.filter(e => e.type === 'advance' && e.source === 'drawer_' + st.id).reduce((s, e) => s + e.amount, 0);                
-                const currentAtt = staffAttendance[st.id] || 'full';
+        
+        // এখানে যে স্টাফ এন্ট্রি করেছে (staffId) তার অ্যাডভান্স বা খরচ হিসেবে যোগ হবে
+        // আর ড্রয়ার ক্যাশের ক্ষেত্রে যার ড্রয়ার থেকে নেওয়া হয়েছে (source) তা মাইনাস হবে
+        const totalAdvance = todayEntries.filter(e => 
+            (e.type === 'advance' || e.type === 'expense') && 
+            (e.staffId === st.id || e.source === 'drawer_' + st.id)
+        ).reduce((s, e) => {
+            // যদি সে নিজে এন্ট্রি করে অথবা তার ড্রয়ার থেকে টাকাটা কাটা হয়
+            return s + e.amount;
+        }, 0);
                 let payoutText = '';
 
                 if (st.type === 'daily_50') {
