@@ -580,7 +580,7 @@
                 try {
                     const records = JSON.parse(localStorage.getItem(key)) || [];
                     const dayAdv = records
-                        .filter(e => e.type === 'advance' && e.staffId === st.id)
+                        .filter(e => e.type === 'advance' && e.staffId === st.id && e.source !== 'Online')
                         .reduce((sum, e) => sum + e.amount, 0);
                     return total + dayAdv;
                 } catch (err) {
