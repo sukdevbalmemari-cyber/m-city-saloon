@@ -449,6 +449,17 @@
             staffAttendance = savedAtt ? JSON.parse(savedAtt) : {};
 
             calculateAndRenderAll();
+            // ফায়ারবেস থেকে ড্রয়ারের ওপেনিং ক্যাশ রিয়েল-টাইমে সিঙ্ক করার জন্য
+            if (db) {
+                db.ref(`drawers/${activeDateKey}`).on('value', (snapshot) => {
+                    const val = snapshot.val();
+                    if (val) {
+                        staffOpeningDrawers = val;
+                        localStorage.setItem('salon_drawers_' + activeDateKey, JSON.stringify(staffOpeningDrawers));
+                        calculateAndRenderAll();
+                    }
+                });
+            }
 
             if (db) {
                 db.ref(`records/${activeDateKey}`).on('value', snap => {
@@ -532,16 +543,23 @@
             } else alert('ভুল পিন!');
         }
 
-        function saveStaffOpeningDrawer(staffId) {
+    function saveStaffOpeningDrawer(staffId) {
             const inputEl = document.getElementById(`openingCash_${staffId}`);
             if (!inputEl) return;
             const val = parseFloat(inputEl.value) || 0;
             staffOpeningDrawers[staffId] = val;
             localStorage.setItem('salon_drawers_' + activeDateKey, JSON.stringify(staffOpeningDrawers));
-            if (db) db.ref(`drawers/${activeDateKey}/${staffId}`).set(val);
-            calculateAndRenderAll();
+            
+            // ফায়ারবেসে সেভ করার পর সাথে সাথে যাতে প্যানেল আপডেট হয়
+            if (db) {
+                db.ref(`drawers/${activeDateKey}/${staffId}`).set(val).then(() => {
+                    calculateAndRenderAll();
+                });
+            } else {
+                calculateAndRenderAll();
+            }
         }
-
+        
         function renderStaffDrawers() {
             const container = document.getElementById('staffDrawersContainer');
             if (!container) return;
