@@ -573,8 +573,11 @@
                 const cashWork = todayEntries.filter(e => e.type === 'service' && e.staffId === st.id && e.method === 'Cash').reduce((s, e) => s + e.amount, 0);
                 const upiWork = todayEntries.filter(e => e.type === 'service' && e.staffId === st.id && e.method === 'UPI').reduce((s, e) => s + e.amount, 0);
                 const drawerExpenses = todayEntries.filter(e => e.type === 'expense' && e.source === `drawer_${st.id}`).reduce((s, e) => s + e.amount, 0);
-                const drawerAdvances = todayEntries.filter(e => e.type === 'advance' && e.source === `drawer_${st.id}`).reduce((s, e) => s + e.amount, 0);
-               const totalStaffAdvance = Object.keys(localStorage)
+                const drawerAdvances = todayEntries.filter(e => 
+                    e.type === 'advance' && 
+                    e.source === 'drawer_' + st.id
+               ).reduce((s, e) => s + e.amount, 0);               
+                const totalStaffAdvance = Object.keys(localStorage)
             .filter(key => key.startsWith('salon_records_'))
             .reduce((total, key) => {
                 try {
@@ -688,12 +691,11 @@
                 const currentAtt = staffAttendance[st.id] || 'full';
                 const totalWork = todayEntries.filter(e => e.type === 'service' && e.staffId === st.id).reduce((s, e) => s + e.amount, 0);
         
-
-    const totalAdvance = todayEntries.filter(e => 
-    e.type === 'advance' && 
-    e.staffId === st.id && 
-    (!e.source || e.source === 'cash' || e.source === 'drawer_' + st.id)
-).reduce((s, e) => s + e.amount, 0);                let payoutText = '';
+               const totalAdvance = todayEntries.filter(e => 
+               e.type === 'advance' && 
+               e.staffId === st.id
+             ).reduce((s, e) => s + e.amount, 0);
+                    let payoutText = '';
 
                 if (st.type === 'daily_50') {
                     const rawPay = Math.round(totalWork * 0.5);
