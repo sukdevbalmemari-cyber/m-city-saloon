@@ -651,7 +651,7 @@
             });
         }
 
-        // Bill Reminder & Photo Tracking Functions
+        // Bill Reminder & Photo Tracking Functions (Synced with Firebase & LocalStorage)
         function saveBillReminder() {
             const name = document.getElementById('billNameInput').value.trim();
             const amount = parseFloat(document.getElementById('billAmountInput').value) || 0;
@@ -672,9 +672,16 @@
         }
 
         function storeBillData(name, amount, dueDate, photoUrl) {
+            const billId = 'bill_' + Date.now();
+            const billObj = { id: billId, name, amount, dueDate, photoUrl };
+
             let bills = JSON.parse(localStorage.getItem('salon_bills') || '[]');
-            bills.push({ id: 'bill_' + Date.now(), name, amount, dueDate, photoUrl });
+            bills.push(billObj);
             localStorage.setItem('salon_bills', JSON.stringify(bills));
+
+            if (db) {
+                db.ref(`bills/${billId}`).set(billObj);
+            }
 
             document.getElementById('billNameInput').value = '';
             document.getElementById('billAmountInput').value = '';
@@ -711,6 +718,9 @@
             let bills = JSON.parse(localStorage.getItem('salon_bills') || '[]');
             bills = bills.filter(b => b.id !== id);
             localStorage.setItem('salon_bills', JSON.stringify(bills));
+            if (db) {
+                db.ref(`bills/${id}`).remove();
+            }
             loadBills();
         }
 
@@ -802,7 +812,7 @@
             calculateAndRenderAll();
         }
 
-        // NEW: Prompt modal or handler for staff commission retention / withdrawal
+        // Cloud-synced Retained Commission Balance (हিসাব বদল)
         function openRetainModal(staffId) {
             const st = localStaffList.find(s => s.id === staffId);
             if (!st) return;
@@ -821,6 +831,11 @@
                     currentRetained += val;
                     if (currentRetained < 0) currentRetained = 0;
                     localStorage.setItem(retainedKey, currentRetained);
+                    
+                    if (db) {
+                        db.ref(`retained/${activeDateKey}/${st.id}`).set(currentRetained);
+                    }
+
                     alert('হিসাব সফলভাবে আপডেট করা হয়েছে!');
                     calculateAndRenderAll();
                 }
