@@ -473,6 +473,27 @@
                 if (val) Object.keys(val).forEach(k => pendingRequests.push({ id: k, ...val[k] }));
                 renderPendingRequests();
             });
+
+            // Firebase sync for bills and retained balances
+            db.ref('bills').on('value', snap => {
+                const val = snap.val();
+                if (val) {
+                    let cloudBills = [];
+                    Object.keys(val).forEach(k => cloudBills.push(val[k]));
+                    localStorage.setItem('salon_bills', JSON.stringify(cloudBills));
+                    loadBills();
+                }
+            });
+
+            db.ref('retained').on('value', snap => {
+                const val = snap.val();
+                if (val && val[activeDateKey]) {
+                    Object.keys(val[activeDateKey]).forEach(stId => {
+                        localStorage.setItem(`salon_retained_${activeDateKey}_${stId}`, val[activeDateKey][stId]);
+                    });
+                    renderStaffTable();
+                }
+            });
         } catch(err) {}
 
         function loadDateData(dateStr) {
@@ -651,7 +672,7 @@
             });
         }
 
-        // Bill Reminder & Photo Tracking Functions (Synced with Firebase & LocalStorage)
+        // Bill Reminder & Photo Tracking Functions (Synced with Firebase)
         function saveBillReminder() {
             const name = document.getElementById('billNameInput').value.trim();
             const amount = parseFloat(document.getElementById('billAmountInput').value) || 0;
@@ -812,7 +833,7 @@
             calculateAndRenderAll();
         }
 
-        // Cloud-synced Retained Commission Balance (हিসাব বদল)
+        // Cloud-synced Retained Commission Balance (হিসাব বদল)
         function openRetainModal(staffId) {
             const st = localStaffList.find(s => s.id === staffId);
             if (!st) return;
