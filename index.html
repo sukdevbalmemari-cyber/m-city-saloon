@@ -238,6 +238,7 @@
                                 <th class="p-2.5">চুক্তি</th>
                                 <th class="p-2.5">হাজিরা</th>
                                 <th class="p-2.5">কাজের পরিমাণ</th>
+                                <th class="p-2.5">কমিশন থেকে জমা (Retained)</th>
                                 <th class="p-2.5">অগ্রিম (খোরচাপাতি)</th>
                                 <th class="p-2.5">নিট পাওনা / হিসাব</th>
                                 <th class="p-2.5 text-center" id="staffTableClosingHead">অ্যাকশন</th>
@@ -544,7 +545,6 @@
             document.getElementById('mainApp').classList.remove('hidden');
             document.getElementById('roleBadge').textContent = user.role === 'admin' ? 'মালিক কন্ট্রোল' : `কারিগর: ${user.name}`;
 
-            // Hide/Show Admin-only sections (Bill Reminder & Photo Tracking, Advance Return)
             const billSec = document.getElementById('adminBillReminderSection');
             const retSec = document.getElementById('adminAdvanceReturnSection');
 
@@ -621,7 +621,6 @@
                 const cashWork = todayEntries.filter(e => e.type === 'service' && e.staffId === st.id && e.method === 'Cash').reduce((s, e) => s + e.amount, 0);
                 const upiWork = todayEntries.filter(e => e.type === 'service' && e.staffId === st.id && e.method === 'UPI').reduce((s, e) => s + e.amount, 0);
                 const drawerExpenses = todayEntries.filter(e => e.type === 'expense' && e.source === `drawer_${st.id}`).reduce((s, e) => s + e.amount, 0);
-                
                 const drawerAdvances = todayEntries.filter(e => e.type === 'advance' && e.staffId === st.id && e.source === 'drawer_self').reduce((s, e) => s + e.amount, 0);
 
                 const currentDrawerCash = (opening + cashWork) - (drawerExpenses + drawerAdvances);
@@ -803,6 +802,31 @@
             calculateAndRenderAll();
         }
 
+        // NEW: Prompt modal or handler for staff commission retention / withdrawal
+        function openRetainModal(staffId) {
+            const st = localStaffList.find(s => s.id === staffId);
+            if (!st) return;
+            const totalWork = todayEntries.filter(e => e.type === 'service' && e.staffId === st.id).reduce((s, e) => s + e.amount, 0);
+            const rawPay = Math.round(totalWork * 0.5);
+            
+            const retainedKey = `salon_retained_${activeDateKey}_${st.id}`;
+            let currentRetained = parseFloat(localStorage.getItem(retainedKey)) || 0;
+
+            const actionType = prompt(`${st.name}-এর কমিশন ₹${rawPay}:
+১. দোকানে জমা রাখতে চাইলে পজিটিভ সংখ্যা দিন (যেমন: 150)
+২. জমানো টাকা তুলতে চাইলে মাইনাস সংখ্যা দিন (যেমন: -50)`);
+            if (actionType !== null && actionType.trim() !== "") {
+                const val = parseFloat(actionType);
+                if (!isNaN(val)) {
+                    currentRetained += val;
+                    if (currentRetained < 0) currentRetained = 0;
+                    localStorage.setItem(retainedKey, currentRetained);
+                    alert('হিসাব সফলভাবে আপডেট করা হয়েছে!');
+                    calculateAndRenderAll();
+                }
+            }
+        }
+
         function renderStaffTable() {
             const tbody = document.getElementById('staffTableBody');
             if (!tbody) return;
@@ -817,12 +841,15 @@
                 const totalReturn = todayEntries.filter(e => e.type === 'advance_return' && e.staffId === st.id).reduce((s, e) => s + e.amount, 0);
                 const netAdvance = Math.max(0, totalAdvance - totalReturn);
 
+                const retainedKey = `salon_retained_${activeDateKey}_${st.id}`;
+                const retainedAmount = parseFloat(localStorage.getItem(retainedKey)) || 0;
+
                 let payoutText = '';
 
                 if (st.type === 'daily_50') {
                     const rawPay = Math.round(totalWork * 0.5);
-                    const netPayable = Math.max(0, rawPay - netAdvance);
-                    payoutText = `<span class="text-amber-400 font-bold">কমিশন: ₹${rawPay}</span> <span class="text-[10px] text-rose-400 block">অগ্রিম পাওনা: ₹${netAdvance} (শোধ বাদে)</span>`;
+                    const netPayable = Math.max(0, rawPay - retainedAmount - netAdvance);
+                    payoutText = `<span class="text-amber-400 font-bold">পাওনা ক্যাশ: ₹${netPayable}</span> <span class="text-[10px] text-slate-400 block">(কমিশন: ₹${rawPay} - জমা: ₹${retainedAmount} - অগ্রিম: ₹${netAdvance})</span>`;
                 } else {
                     const monthlyBase = st.salary || 4000;
                     const dailyBase = monthlyBase / 30;
@@ -832,8 +859,8 @@
                     } else if (currentAtt === 'absent') {
                         calculatedPay = Math.round(monthlyBase - dailyBase);
                     }
-                    const netMonthly = Math.round(calculatedPay - netAdvance);
-                    payoutText = `<span class="text-sky-400 font-bold">নিট পাওনা: ₹${netMonthly}</span> <span class="text-[10px] text-slate-400 block">(বেতন: ₹${Math.round(calculatedPay)} - অগ্রিম: ₹${netAdvance})</span>`;
+                    const netMonthly = Math.round(calculatedPay - retainedAmount - netAdvance);
+                    payoutText = `<span class="text-sky-400 font-bold">নিট পাওনা: ₹${netMonthly}</span> <span class="text-[10px] text-slate-400 block">(বেতন: ₹${Math.round(calculatedPay)} - জমা: ₹${retainedAmount} - অগ্রিম: ₹${netAdvance})</span>`;
                 }
 
                 const attSelect = `
@@ -843,6 +870,10 @@
                         <option value="absent" ${currentAtt === 'absent' ? 'selected' : ''}>কামাই</option>
                     </select>
                 `;
+
+                const retainBtn = (currentUser && currentUser.role === 'admin') ? `
+                    <button onclick="openRetainModal('${st.id}')" class="text-[10px] bg-sky-700 hover:bg-sky-600 text-white px-2 py-0.5 rounded ml-1" title="কমিশন জমা বা তোলা">হিসাব বদল</button>
+                ` : '';
 
                 const editDeleteAction = (currentUser && currentUser.role === 'admin') ? `
                     <td class="p-2.5 text-center">
@@ -857,6 +888,7 @@
                         <td class="p-2.5">${st.type === 'daily_50' ? '৫০-৫০ ভাগ' : 'মাসিক মাইনে'}</td>
                         <td class="p-2.5">${attSelect}</td>
                         <td class="p-2.5 text-slate-200 font-semibold">₹${totalWork}</td>
+                        <td class="p-2.5 text-sky-300 font-semibold">₹${retainedAmount} ${retainBtn}</td>
                         <td class="p-2.5 text-rose-400 font-semibold">₹${netAdvance}</td>
                         <td class="p-2.5">${payoutText}</td>
                         ${editDeleteAction}
@@ -1108,7 +1140,12 @@
         function sendDailySummaryReport() {
             const ownerPhoneNo = "919153292689"; // 9153292689 with country code 91
             let totalDayCollection = todayEntries.filter(e => e.type === 'service').reduce((s, e) => s + e.amount, 0);
-            let summaryMessage = `📊 *M.city STYLE SALOON - দৈনিক হিসাব* 📊\nতারিখ: ${activeDateKey}\n\n💰 মোট কালেকশন: ₹${totalDayCollection}\n\nধন্যবাদ!`;
+            let summaryMessage = `📊 *M.city STYLE SALOON - দৈনিক হিসাব* 📊
+তারিখ: ${activeDateKey}
+
+💰 মোট কালেকশন: ₹${totalDayCollection}
+
+ধন্যবাদ!`;
             window.open(`https://wa.me/${ownerPhoneNo}?text=${encodeURIComponent(summaryMessage)}`, '_blank');
         }
     </script>
