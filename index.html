@@ -238,7 +238,7 @@
                                 <th class="p-2.5">চুক্তি</th>
                                 <th class="p-2.5">হাজিরা</th>
                                 <th class="p-2.5">কাজের পরিমাণ</th>
-                                <th class="p-2.5">কমিশন থেকে জমা (Retained)</th>
+                                <th class="p-2.5">জমানো টাকা (Retained)</th>
                                 <th class="p-2.5">অগ্রিম (খোরচাপাতি)</th>
                                 <th class="p-2.5">নিট পাওনা / হিসাব</th>
                                 <th class="p-2.5 text-center" id="staffTableClosingHead">অ্যাকশন</th>
@@ -285,6 +285,17 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- ছবির প্রিভিউ মোডাল -->
+    <div id="imageModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 max-w-lg w-full text-center relative space-y-3">
+            <h3 class="text-sm font-bold text-amber-400">বিলের রসিদ ফটো</h3>
+            <div class="overflow-auto max-h-[70vh] flex justify-center items-center">
+                <img id="modalPreviewImage" src="" alt="Bill Photo" class="max-w-full rounded border border-slate-700">
+            </div>
+            <button onclick="closeImageModal()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition">বন্ধ করুন</button>
+        </div>
     </div>
 
     <!-- মোডাল ১: কারিগর যোগ/এডিট -->
@@ -420,7 +431,6 @@
         }
         updateStaffDropdowns();
 
-        // Persistent Login Check on window load
         window.onload = function() {
             const savedSession = localStorage.getItem('salon_current_user');
             if (savedSession) {
@@ -474,7 +484,6 @@
                 renderPendingRequests();
             });
 
-            // Firebase sync for bills and retained balances
             db.ref('bills').on('value', snap => {
                 const val = snap.val();
                 if (val) {
@@ -672,7 +681,7 @@
             });
         }
 
-        // Bill Reminder & Photo Tracking Functions (Synced with Firebase)
+        // Bill Reminder & Photo Modal Viewing Functions
         function saveBillReminder() {
             const name = document.getElementById('billNameInput').value.trim();
             const amount = parseFloat(document.getElementById('billAmountInput').value) || 0;
@@ -722,17 +731,28 @@
             }
             container.innerHTML = '';
             bills.forEach(b => {
+                const photoBtn = b.photoUrl ? `<button onclick="openImageModal('${b.photoUrl}')" class="text-sky-400 underline text-[10px] ml-2">ফটো দেখুন</button>` : '';
                 container.innerHTML += `
                     <div class="bg-slate-900 border border-slate-700 p-2.5 rounded flex justify-between items-center text-xs">
                         <div>
                             <span class="font-bold text-amber-300">${b.name}</span> - <strong class="text-rose-400">₹${b.amount}</strong> 
                             <span class="text-[10px] text-slate-400 block">ডেডলাইন: ${b.dueDate || 'নির্ধারিত নেই'}</span>
-                            ${b.photoUrl ? `<a href="${b.photoUrl}" target="_blank" class="text-sky-400 underline text-[10px]">রসিদের ফটো দেখুন</a>` : ''}
+                            ${photoBtn}
                         </div>
                         <button onclick="deleteBill('${b.id}')" class="text-rose-400 hover:text-rose-300 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 `;
             });
+        }
+
+        function openImageModal(url) {
+            document.getElementById('modalPreviewImage').src = url;
+            document.getElementById('imageModal').classList.remove('hidden');
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.add('hidden');
+            document.getElementById('modalPreviewImage').src = '';
         }
 
         function deleteBill(id) {
@@ -745,7 +765,6 @@
             loadBills();
         }
 
-        // Advance Return / Sodh function
         function saveAdvanceReturn() {
             const staffName = document.getElementById('returnStaffSelect').value;
             const amount = parseFloat(document.getElementById('returnAmountInput').value) || 0;
@@ -792,7 +811,7 @@
             const method = document.getElementById('entryPaymentMethod').value;
             const isHalfDay = document.getElementById('isHalfDayEntry').checked;
 
-            if (!amount || amount <= 0) return alert('সঠিক টাকার অঙ্ক দিন (মাইনাস বা শূন্য দেওয়া যাবে না)');
+            if (!amount || amount <= 0) return alert('সঠিক টাকার অঙ্ক দিন');
 
             const newRecord = {
                 id: 'rec_' + Date.now(),
@@ -833,7 +852,6 @@
             calculateAndRenderAll();
         }
 
-        // Cloud-synced Retained Commission Balance (হিসাব বদল)
         function openRetainModal(staffId) {
             const st = localStaffList.find(s => s.id === staffId);
             if (!st) return;
@@ -884,8 +902,8 @@
 
                 if (st.type === 'daily_50') {
                     const rawPay = Math.round(totalWork * 0.5);
-                    const netPayable = Math.max(0, rawPay - retainedAmount - netAdvance);
-                    payoutText = `<span class="text-amber-400 font-bold">পাওনা ক্যাশ: ₹${netPayable}</span> <span class="text-[10px] text-slate-400 block">(কমিশন: ₹${rawPay} - জমা: ₹${retainedAmount} - অগ্রিম: ₹${netAdvance})</span>`;
+                    const netPayable = Math.max(0, rawPay + retainedAmount - netAdvance);
+                    payoutText = `<span class="text-amber-400 font-bold">নিট পাওনা: ₹${netPayable}</span> <span class="text-[10px] text-slate-400 block">(কমিশন: ₹${rawPay} + জমা: ₹${retainedAmount} - অগ্রিম: ₹${netAdvance})</span>`;
                 } else {
                     const monthlyBase = st.salary || 4000;
                     const dailyBase = monthlyBase / 30;
@@ -895,8 +913,8 @@
                     } else if (currentAtt === 'absent') {
                         calculatedPay = Math.round(monthlyBase - dailyBase);
                     }
-                    const netMonthly = Math.round(calculatedPay - retainedAmount - netAdvance);
-                    payoutText = `<span class="text-sky-400 font-bold">নিট পাওনা: ₹${netMonthly}</span> <span class="text-[10px] text-slate-400 block">(বেতন: ₹${Math.round(calculatedPay)} - জমা: ₹${retainedAmount} - অগ্রিম: ₹${netAdvance})</span>`;
+                    const netMonthly = Math.max(0, Math.round(calculatedPay) + retainedAmount - netAdvance);
+                    payoutText = `<span class="text-sky-400 font-bold">নিট পাওনা: ₹${netMonthly}</span> <span class="text-[10px] text-slate-400 block">(বেতন: ₹${Math.round(calculatedPay)} + জমা: ₹${retainedAmount} - অগ্রিম: ₹${netAdvance})</span>`;
                 }
 
                 const attSelect = `
@@ -1172,9 +1190,8 @@
             calculateAndRenderAll();
         }
 
-        // Fixed Permanent WhatsApp Report to 9153292689
         function sendDailySummaryReport() {
-            const ownerPhoneNo = "919153292689"; // 9153292689 with country code 91
+            const ownerPhoneNo = "919153292689";
             let totalDayCollection = todayEntries.filter(e => e.type === 'service').reduce((s, e) => s + e.amount, 0);
             let summaryMessage = `📊 *M.city STYLE SALOON - দৈনিক হিসাব* 📊
 তারিখ: ${activeDateKey}
