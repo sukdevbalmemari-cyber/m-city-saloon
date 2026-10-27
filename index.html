@@ -114,6 +114,33 @@
                 <div id="staffDrawersContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
             </section>
 
+            <!-- বিল রিমাইন্ডার ও ফটো ট্র্যাকিং সিস্টেম (শুধু মালিকের জন্য) -->
+            <div id="adminBillReminderSection" class="hidden bg-slate-800 border border-slate-700 p-4 rounded-xl shadow space-y-3">
+                <h3 class="text-sm font-semibold text-amber-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-bolt"></i> বিল রিমাইন্ডার ও ফটো ট্র্যাকিং
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
+                    <input type="text" id="billNameInput" placeholder="বিলের নাম (যেমন: ইলেকট্রিক বিল)" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200 focus:outline-none">
+                    <input type="number" id="billAmountInput" placeholder="টাকার পরিমাণ (₹)" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200 focus:outline-none">
+                    <input type="date" id="billDueDateInput" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200 focus:outline-none">
+                    <input type="file" id="billPhotoInput" accept="image/*" class="bg-slate-900 border border-slate-700 rounded p-1 text-xs text-slate-400">
+                </div>
+                <button onclick="saveBillReminder()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-2 rounded text-xs transition">বিল সেভ ও রিমাইন্ডার দিন</button>
+                <div id="billListContainer" class="space-y-2 mt-2"></div>
+            </div>
+
+            <!-- কারিগরের অগ্রিম শোধ / ফেরত এন্ট্রি (শুধু মালিকের জন্য) -->
+            <div id="adminAdvanceReturnSection" class="hidden bg-slate-800 border border-slate-700 p-4 rounded-xl shadow space-y-3">
+                <h3 class="text-sm font-semibold text-emerald-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-left"></i> কারিগরের অগ্রিম শোধ / ফেরত (Advance Return)
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <select id="returnStaffSelect" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200 focus:outline-none"></select>
+                    <input type="number" id="returnAmountInput" placeholder="ফেরত দেওয়ার পরিমাণ (₹)" class="bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200 focus:outline-none">
+                    <button onclick="saveAdvanceReturn()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded text-xs transition">টাকা জমা করুন (Sodh)</button>
+                </div>
+            </div>
+
             <!-- আর্থিক সারাংশ -->
             <section id="adminTotalStatsSection" class="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <div class="bg-slate-800 border border-slate-700 p-3.5 rounded-xl">
@@ -243,16 +270,17 @@
                 </div>
             </div>
 
-            <!-- হোয়াটসঅ্যাপ রিপোর্ট প্যানেল -->
+            <!-- হোয়াটসঅ্যাপ রিপোর্ট প্যানেল (Fixed Permanent Number 9153292689) -->
             <div class="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-lg">
                 <h2 class="text-xl font-bold text-center text-amber-400 mb-6">দৈনিক হিসাব ও হোয়াটসঅ্যাপ রিপোর্ট প্যানেল</h2>
                 <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
                         <h3 class="text-sm font-semibold text-slate-300">সারাদিনের রিপোর্ট</h3>
-                        <p class="text-xs text-slate-400">এক ক্লিকে মালিকের নম্বরে পাঠান।</p>
+                        <p class="text-xs text-slate-400">মালিকের নম্বর স্থায়ীভাবে সেভ করা আছে (9153292689)। এক ক্লিকে পাঠান।</p>
                     </div>
-                    <input type="text" id="ownerWhatsAppNo" placeholder="মালিকের হোয়াটসঅ্যাপ নম্বর (যেমন: 919876543210)" class="bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 w-full md:w-auto">
-                    <button onclick="sendDailySummaryReport(document.getElementById('ownerWhatsAppNo').value)" class="bg-green-600 text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-green-500 w-full md:w-auto text-sm">রিপোর্ট পাঠান</button>
+                    <button onclick="sendDailySummaryReport()" class="bg-green-600 text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-green-500 w-full md:w-auto text-sm shadow">
+                        <i class="fa-brands fa-whatsapp mr-1"></i> এক ক্লিকে রিপোর্ট পাঠান
+                    </button>
                 </div>
             </div>
         </main>
@@ -293,7 +321,7 @@
         </div>
     </div>
 
-    <!-- মোডাল ২: অগ্রিম (মালিকের জন্য) -->
+    <!-- মোডাল ২: অগ্রিম (মালিকের জন্য) - মাধ্যম: অনলাইন / মালিকের ক্যাশ বা নিজের ড্রয়ার -->
     <div id="advanceModal" class="hidden fixed inset-0 bg-black/75 flex items-center justify-center p-4 z-50">
         <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 max-w-sm w-full space-y-3">
             <h3 class="text-base font-bold text-sky-400">অগ্রিম বা খোরচাপাতি এন্ট্রি</h3>
@@ -307,7 +335,10 @@
             </div>
             <div>
                 <label class="block text-xs text-slate-400 mb-1">টাকা কোথা থেকে?</label>
-                <select id="advSourceSelect" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-slate-200 focus:outline-none"></select>
+                <select id="advSourceSelect" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-slate-200 focus:outline-none">
+                    <option value="Online">অনলাইন / মালিকের ক্যাশ</option>
+                    <option value="drawer_self">তার নিজের ড্রয়ার</option>
+                </select>
             </div>
             <div class="flex justify-end gap-2 pt-2">
                 <button onclick="closeAdvanceModal()" class="text-xs px-3 py-1.5 rounded bg-slate-700 text-slate-300">বাতিল</button>
@@ -326,11 +357,10 @@
             </div>
             <div>
                 <label class="block text-xs text-slate-400 mb-1">ড্রয়ার বা মাধ্যম</label>
-<select id="staffReqSourceSelect" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-slate-200 focus:outline-none">
-    <option value="Online">অনলাইন / মালিকের পকেট</option>
-    <option value="drawer_Surjo">Surjo-এর ড্রয়ার</option>
-    <option value="drawer_Rana">Rana-এর ড্রয়ার</option>
-</select>
+                <select id="staffReqSourceSelect" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-slate-200 focus:outline-none">
+                    <option value="Online">অনলাইন / মালিকের ক্যাশ</option>
+                    <option value="drawer_self">তার নিজের ড্রয়ার</option>
+                </select>
             </div>
             <div class="flex justify-end gap-2 pt-2">
                 <button onclick="closeStaffAdvanceRequestModal()" class="text-xs px-3 py-1.5 rounded bg-slate-700 text-slate-300">বাতিল</button>
@@ -343,7 +373,8 @@
     <script>
         let localStaffList = [
             { id: 'rana', name: 'রানা', phone: '', type: 'daily_50', pin: '1111' },
-            { id: 'surya', name: 'সূর্য', phone: '', type: 'daily_50', pin: '2222' }
+            { id: 'surya', name: 'সূর্য', phone: '', type: 'daily_50', pin: '2222' },
+            { id: 'Dev', name: 'Dev', phone: '', type: 'daily_50', pin: '3333' }
         ];
         let adminPinCode = '6969';
         let currentUser = null;
@@ -365,23 +396,20 @@
             const entrySel = document.getElementById('entryStaffSelect');
             const advSel = document.getElementById('advStaffSelect');
             const expSourceSel = document.getElementById('expenseSource');
-            const advSourceSel = document.getElementById('advSourceSelect');
-            const staffReqSrcSel = document.getElementById('staffReqSourceSelect');
+            const returnStaffSel = document.getElementById('returnStaffSelect');
 
             loginSel.innerHTML = '<option value="admin">মালিক (Admin)</option>';
             if (entrySel) entrySel.innerHTML = '';
             if (advSel) advSel.innerHTML = '';
             if (expSourceSel) expSourceSel.innerHTML = '<option value="Online">অনলাইন / মালিকের পকেট</option>';
-            if (advSourceSel) advSourceSel.innerHTML = '<option value="Online">অনলাইন / মালিকের পকেট</option>';
-            if (staffReqSrcSel) staffReqSrcSel.innerHTML = '<option value="Online">অনলাইন / মালিকের পকেট</option>';
+            if (returnStaffSel) returnStaffSel.innerHTML = '';
 
             localStaffList.forEach(st => {
                 loginSel.innerHTML += `<option value="${st.id}">কারিগর: ${st.name}</option>`;
                 if (entrySel) entrySel.innerHTML += `<option value="${st.id}">${st.name} (${st.type === 'daily_50' ? '৫০-৫০' : 'মাসিক'})</option>`;
                 if (advSel) advSel.innerHTML += `<option value="${st.id}">${st.name}</option>`;
                 if (expSourceSel) expSourceSel.innerHTML += `<option value="drawer_${st.id}">${st.name}-এর ড্রয়ার</option>`;
-                if (advSourceSel) advSourceSel.innerHTML += `<option value="drawer_${st.id}">${st.name}-এর ড্রয়ার</option>`;
-                if (staffReqSrcSel) staffReqSrcSel.innerHTML += `<option value="drawer_${st.id}">${st.name}-এর ড্রয়ার</option>`;
+                if (returnStaffSel) returnStaffSel.innerHTML += `<option value="${st.name}">${st.name}</option>`;
             });
 
             if (currentUser && currentUser.role === 'staff' && entrySel) {
@@ -390,6 +418,18 @@
             }
         }
         updateStaffDropdowns();
+
+        // Persistent Login Check on window load
+        window.onload = function() {
+            const savedSession = localStorage.getItem('salon_current_user');
+            if (savedSession) {
+                try {
+                    currentUser = JSON.parse(savedSession);
+                    setupUserSession(currentUser, true);
+                } catch(e) {}
+            }
+            setTimeout(dismissSplash, 1200);
+        };
 
         function dismissSplash() {
             const splash = document.getElementById('splashScreen');
@@ -402,7 +442,6 @@
                 }, 400);
             }
         }
-        setTimeout(dismissSplash, 1200);
 
         let db = null;
         try {
@@ -451,7 +490,8 @@
             staffAttendance = savedAtt ? JSON.parse(savedAtt) : {};
 
             calculateAndRenderAll();
-            // ফায়ারবেস থেকে ড্রয়ারের ওপেনিং ক্যাশ রিয়েল-টাইমে সিঙ্ক করার জন্য
+            loadBills();
+
             if (db) {
                 db.ref(`drawers/${activeDateKey}`).on('value', (snapshot) => {
                     const val = snapshot.val();
@@ -461,9 +501,6 @@
                         calculateAndRenderAll();
                     }
                 });
-            }
-
-            if (db) {
                 db.ref(`records/${activeDateKey}`).on('value', snap => {
                     const val = snap.val();
                     todayEntries = [];
@@ -476,12 +513,12 @@
 
         function changeActiveDate(newDate) { if (newDate) loadDateData(newDate); }
         function setTodayDate() {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    loadDateData(`${year}-${month}-${day}`);
-} 
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            loadDateData(`${year}-${month}-${day}`);
+        } 
         
         function handleLogin() {
             const selectedId = document.getElementById('loginUserSelect').value;
@@ -498,11 +535,18 @@
             }
         }
 
-        function setupUserSession(user) {
+        function setupUserSession(user, skipStorage) {
             currentUser = user;
+            if (!skipStorage) {
+                localStorage.setItem('salon_current_user', JSON.stringify(user));
+            }
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
             document.getElementById('roleBadge').textContent = user.role === 'admin' ? 'মালিক কন্ট্রোল' : `কারিগর: ${user.name}`;
+
+            // Hide/Show Admin-only sections (Bill Reminder & Photo Tracking, Advance Return)
+            const billSec = document.getElementById('adminBillReminderSection');
+            const retSec = document.getElementById('adminAdvanceReturnSection');
 
             if (user.role === 'admin') {
                 document.getElementById('adminTotalStatsSection').classList.remove('hidden');
@@ -511,6 +555,8 @@
                 document.getElementById('adminPinChangeBtn').classList.remove('hidden');
                 document.getElementById('adminPendingRequestsContainer').classList.remove('hidden');
                 document.getElementById('staffRequestAdvanceBtn').classList.add('hidden');
+                if (billSec) billSec.classList.remove('hidden');
+                if (retSec) retSec.classList.remove('hidden');
             } else {
                 document.getElementById('adminTotalStatsSection').classList.add('hidden');
                 document.getElementById('expenseBox').classList.add('hidden');
@@ -518,6 +564,8 @@
                 document.getElementById('adminPinChangeBtn').classList.add('hidden');
                 document.getElementById('adminPendingRequestsContainer').classList.add('hidden');
                 document.getElementById('staffRequestAdvanceBtn').classList.remove('hidden');
+                if (billSec) billSec.classList.add('hidden');
+                if (retSec) retSec.classList.add('hidden');
                 document.getElementById('entryStaffSelect').value = user.id;
                 document.getElementById('entryStaffSelect').disabled = true;
             }
@@ -526,6 +574,7 @@
 
         function handleLogout() {
             currentUser = null;
+            localStorage.removeItem('salon_current_user');
             document.getElementById('loginPinInput').value = '';
             document.getElementById('loginErrorMsg').classList.add('hidden');
             document.getElementById('mainApp').classList.add('hidden');
@@ -545,14 +594,13 @@
             } else alert('ভুল পিন!');
         }
 
-    function saveStaffOpeningDrawer(staffId) {
+        function saveStaffOpeningDrawer(staffId) {
             const inputEl = document.getElementById(`openingCash_${staffId}`);
             if (!inputEl) return;
             const val = parseFloat(inputEl.value) || 0;
             staffOpeningDrawers[staffId] = val;
             localStorage.setItem('salon_drawers_' + activeDateKey, JSON.stringify(staffOpeningDrawers));
             
-            // ফায়ারবেসে সেভ করার পর সাথে সাথে যাতে প্যানেল আপডেট হয়
             if (db) {
                 db.ref(`drawers/${activeDateKey}/${staffId}`).set(val).then(() => {
                     calculateAndRenderAll();
@@ -573,25 +621,10 @@
                 const cashWork = todayEntries.filter(e => e.type === 'service' && e.staffId === st.id && e.method === 'Cash').reduce((s, e) => s + e.amount, 0);
                 const upiWork = todayEntries.filter(e => e.type === 'service' && e.staffId === st.id && e.method === 'UPI').reduce((s, e) => s + e.amount, 0);
                 const drawerExpenses = todayEntries.filter(e => e.type === 'expense' && e.source === `drawer_${st.id}`).reduce((s, e) => s + e.amount, 0);
-                const drawerAdvances = todayEntries.filter(e => 
-                    e.type === 'advance' && 
-                    e.source === 'drawer_' + st.id
-               ).reduce((s, e) => s + e.amount, 0);               
-                const totalStaffAdvance = Object.keys(localStorage)
-            .filter(key => key.startsWith('salon_records_'))
-            .reduce((total, key) => {
-                try {
-                    const records = JSON.parse(localStorage.getItem(key)) || [];
-                    const dayAdv = records
-                        .filter(e => e.type === 'advance' && e.staffId === st.id && e.source !== 'Online')
-                        .reduce((sum, e) => sum + e.amount, 0);
-                    return total + dayAdv;
-                } catch (err) {
-                    return total;
-                }
-            }, 0);
-            
-        const currentDrawerCash = (opening + cashWork) - (drawerExpenses + totalStaffAdvance);
+                
+                const drawerAdvances = todayEntries.filter(e => e.type === 'advance' && e.staffId === st.id && e.source === 'drawer_self').reduce((s, e) => s + e.amount, 0);
+
+                const currentDrawerCash = (opening + cashWork) - (drawerExpenses + drawerAdvances);
 
                 container.innerHTML += `
                     <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl shadow space-y-3">
@@ -617,6 +650,95 @@
                     </div>
                 `;
             });
+        }
+
+        // Bill Reminder & Photo Tracking Functions
+        function saveBillReminder() {
+            const name = document.getElementById('billNameInput').value.trim();
+            const amount = parseFloat(document.getElementById('billAmountInput').value) || 0;
+            const dueDate = document.getElementById('billDueDateInput').value;
+            const fileInput = document.getElementById('billPhotoInput');
+
+            if (!name || amount <= 0) return alert('বিলের নাম ও সঠিক টাকার পরিমাণ দিন!');
+
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    storeBillData(name, amount, dueDate, e.target.result);
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                storeBillData(name, amount, dueDate, '');
+            }
+        }
+
+        function storeBillData(name, amount, dueDate, photoUrl) {
+            let bills = JSON.parse(localStorage.getItem('salon_bills') || '[]');
+            bills.push({ id: 'bill_' + Date.now(), name, amount, dueDate, photoUrl });
+            localStorage.setItem('salon_bills', JSON.stringify(bills));
+
+            document.getElementById('billNameInput').value = '';
+            document.getElementById('billAmountInput').value = '';
+            document.getElementById('billDueDateInput').value = '';
+            document.getElementById('billPhotoInput').value = '';
+            loadBills();
+            alert('বিল সফলভাবে সেভ ও রিমাইন্ডার সেট করা হয়েছে!');
+        }
+
+        function loadBills() {
+            const container = document.getElementById('billListContainer');
+            if (!container) return;
+            let bills = JSON.parse(localStorage.getItem('salon_bills') || '[]');
+            if (bills.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-400">কোনো বিল সেভ করা নেই।</p>';
+                return;
+            }
+            container.innerHTML = '';
+            bills.forEach(b => {
+                container.innerHTML += `
+                    <div class="bg-slate-900 border border-slate-700 p-2.5 rounded flex justify-between items-center text-xs">
+                        <div>
+                            <span class="font-bold text-amber-300">${b.name}</span> - <strong class="text-rose-400">₹${b.amount}</strong> 
+                            <span class="text-[10px] text-slate-400 block">ডেডলাইন: ${b.dueDate || 'নির্ধারিত নেই'}</span>
+                            ${b.photoUrl ? `<a href="${b.photoUrl}" target="_blank" class="text-sky-400 underline text-[10px]">রসিদের ফটো দেখুন</a>` : ''}
+                        </div>
+                        <button onclick="deleteBill('${b.id}')" class="text-rose-400 hover:text-rose-300 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteBill(id) {
+            let bills = JSON.parse(localStorage.getItem('salon_bills') || '[]');
+            bills = bills.filter(b => b.id !== id);
+            localStorage.setItem('salon_bills', JSON.stringify(bills));
+            loadBills();
+        }
+
+        // Advance Return / Sodh function
+        function saveAdvanceReturn() {
+            const staffName = document.getElementById('returnStaffSelect').value;
+            const amount = parseFloat(document.getElementById('returnAmountInput').value) || 0;
+            if (amount <= 0) return alert('সঠিক পরিমাণ টাকা লিখুন!');
+
+            let staffObj = localStaffList.find(s => s.name === staffName);
+            if (!staffObj) return alert('কারিগর পাওয়া যায়নি!');
+
+            const returnRec = {
+                id: 'rec_' + Date.now(),
+                type: 'advance_return',
+                staffId: staffObj.id,
+                amount,
+                time: new Date().toLocaleTimeString('bn-IN', { hour: '2-digit', minute: '2-digit' })
+            };
+
+            todayEntries.push(returnRec);
+            localStorage.setItem('salon_records_' + activeDateKey, JSON.stringify(todayEntries));
+            if (db) db.ref(`records/${activeDateKey}/${returnRec.id}`).set(returnRec);
+
+            document.getElementById('returnAmountInput').value = '';
+            alert(`${staffName}-এর ${amount} টাকা অগ্রিম শোধ সফলভাবে এন্ট্রি হলো!`);
+            calculateAndRenderAll();
         }
 
         function calculateAndRenderAll() {
@@ -691,15 +813,16 @@
                 const currentAtt = staffAttendance[st.id] || 'full';
                 const totalWork = todayEntries.filter(e => e.type === 'service' && e.staffId === st.id).reduce((s, e) => s + e.amount, 0);
         
-               const totalAdvance = todayEntries.filter(e => 
-               e.type === 'advance' && 
-               e.staffId === st.id
-             ).reduce((s, e) => s + e.amount, 0);
-                    let payoutText = '';
+                const totalAdvance = todayEntries.filter(e => e.type === 'advance' && e.staffId === st.id).reduce((s, e) => s + e.amount, 0);
+                const totalReturn = todayEntries.filter(e => e.type === 'advance_return' && e.staffId === st.id).reduce((s, e) => s + e.amount, 0);
+                const netAdvance = Math.max(0, totalAdvance - totalReturn);
+
+                let payoutText = '';
 
                 if (st.type === 'daily_50') {
                     const rawPay = Math.round(totalWork * 0.5);
-                    payoutText = `<span class="text-amber-400 font-bold">কমিশন: ₹${rawPay}</span> <span class="text-[10px] text-rose-400 block">অগ্রিম আলাদা: ₹${totalAdvance}</span>`;
+                    const netPayable = Math.max(0, rawPay - netAdvance);
+                    payoutText = `<span class="text-amber-400 font-bold">কমিশন: ₹${rawPay}</span> <span class="text-[10px] text-rose-400 block">অগ্রিম পাওনা: ₹${netAdvance} (শোধ বাদে)</span>`;
                 } else {
                     const monthlyBase = st.salary || 4000;
                     const dailyBase = monthlyBase / 30;
@@ -709,8 +832,8 @@
                     } else if (currentAtt === 'absent') {
                         calculatedPay = Math.round(monthlyBase - dailyBase);
                     }
-                    const netMonthly = Math.round(calculatedPay - totalAdvance);
-                    payoutText = `<span class="text-sky-400 font-bold">নিট পাওনা: ₹${netMonthly}</span> <span class="text-[10px] text-slate-400 block">(বেতন: ₹${Math.round(calculatedPay)} - অগ্রিম: ₹${totalAdvance})</span>`;
+                    const netMonthly = Math.round(calculatedPay - netAdvance);
+                    payoutText = `<span class="text-sky-400 font-bold">নিট পাওনা: ₹${netMonthly}</span> <span class="text-[10px] text-slate-400 block">(বেতন: ₹${Math.round(calculatedPay)} - অগ্রিম: ₹${netAdvance})</span>`;
                 }
 
                 const attSelect = `
@@ -734,7 +857,7 @@
                         <td class="p-2.5">${st.type === 'daily_50' ? '৫০-৫০ ভাগ' : 'মাসিক মাইনে'}</td>
                         <td class="p-2.5">${attSelect}</td>
                         <td class="p-2.5 text-slate-200 font-semibold">₹${totalWork}</td>
-                        <td class="p-2.5 text-rose-400 font-semibold">₹${totalAdvance}</td>
+                        <td class="p-2.5 text-rose-400 font-semibold">₹${netAdvance}</td>
                         <td class="p-2.5">${payoutText}</td>
                         ${editDeleteAction}
                     </tr>
@@ -832,34 +955,33 @@
             });
         }
 
-       function approveAdvanceRequest(id) {
-    const req = pendingRequests.find(r => r.id === id);
-    if (!req) return;
-    
-    const newAdv = {
-        id: 'rec_' + Date.now(),
-        type: 'advance',
-        staffId: req.staffId,
-        amount: req.amount,
-        source: req.source,
-        time: req.time
-    };
-    
-    todayEntries.push(newAdv);
-    localStorage.setItem('salon_records_' + activeDateKey, JSON.stringify(todayEntries));
-    
-    if (db) {
-        db.ref(`records/${activeDateKey}/${newAdv.id}`).set(newAdv);
-        db.ref(`advance_requests/${id}`).remove();
-    }
-    
-    pendingRequests = pendingRequests.filter(r => r.id !== id);
-    renderPendingRequests();
-    
-    if (typeof calculateAndRenderAll === 'function') calculateAndRenderAll();
-    
-    alert('অগ্রিম রিকোয়েস্ট সফলভাবে এপ্রুভ করা হয়েছে!');
-}
+        function approveAdvanceRequest(id) {
+            const req = pendingRequests.find(r => r.id === id);
+            if (!req) return;
+            
+            const newAdv = {
+                id: 'rec_' + Date.now(),
+                type: 'advance',
+                staffId: req.staffId,
+                amount: req.amount,
+                source: req.source,
+                time: req.time
+            };
+            
+            todayEntries.push(newAdv);
+            localStorage.setItem('salon_records_' + activeDateKey, JSON.stringify(todayEntries));
+            
+            if (db) {
+                db.ref(`records/${activeDateKey}/${newAdv.id}`).set(newAdv);
+                db.ref(`advance_requests/${id}`).remove();
+            }
+            
+            pendingRequests = pendingRequests.filter(r => r.id !== id);
+            renderPendingRequests();
+            calculateAndRenderAll();
+            alert('অগ্রিম রিকোয়েস্ট সফলভাবে এপ্রুভ করা হয়েছে!');
+        }
+
         function rejectAdvanceRequest(id) {
             if (db) db.ref(`advance_requests/${id}`).remove();
             pendingRequests = pendingRequests.filter(r => r.id !== id);
@@ -944,12 +1066,14 @@
             displayEntries.slice().reverse().forEach(item => {
                 const actionCell = isAdmin ? `<td class="p-2 text-center"><button onclick="deleteEntry('${item.id}')" class="text-rose-400"><i class="fa-solid fa-trash"></i></button></td>` : '';
                 
-                // কারিগরের নাম খুঁজে বের করা
                 let staffObj = localStaffList.find(s => s.id === item.staffId);
                 let staffNameStr = staffObj ? staffObj.name : 'অজানা';
                 let descText = item.service || item.reason || 'অগ্রিম (খোরচাপাতি)';
+                
                 if (item.type === 'advance') {
                     descText = `<span class="text-amber-400 font-bold">${staffNameStr}</span> - অগ্রিম (খোরচাপাতি)`;
+                } else if (item.type === 'advance_return') {
+                    descText = `<span class="text-emerald-400 font-bold">${staffNameStr}</span> - অগ্রিম শোধ / ফেরত`;
                 } else if (item.type === 'service') {
                     descText = `<span class="text-sky-400 font-bold">${staffNameStr}</span>: ${descText}`;
                 } else {
@@ -961,20 +1085,7 @@
                         <td class="p-2 text-slate-400">${item.time}</td>
                         <td class="p-2">${item.type}</td>
                         <td class="p-2 text-slate-200">${descText}</td>
-                        <td class="p-2 text-slate-400">
-        ${item.source && item.source.startsWith('drawer_') ? 
-            (() => {
-                try {
-                    const sId = item.source.replace('drawer_', '');
-                    const staffList = JSON.parse(localStorage.getItem('salon_staff') || '[]');
-                    const stObj = staffList.find(s => s.id === sId);
-                    return `ড্রয়ার: ${stObj ? stObj.name : 'স্টাফ'}`;
-                } catch(e) {
-                    return item.source;
-                }
-            })() 
-            : (item.method || item.source || '-')}
-    </td>
+                        <td class="p-2 text-slate-400">${item.method || item.source || '-'}</td>
                         <td class="p-2 text-right font-bold">₹${item.amount}</td>
                         ${actionCell}
                     </tr>
@@ -982,7 +1093,7 @@
             });
         }
 
-function deleteEntry(id) {
+        function deleteEntry(id) {
             if (!currentUser || currentUser.role !== 'admin') return;
             todayEntries = todayEntries.filter(x => x.id !== id);
             localStorage.setItem('salon_records_' + activeDateKey, JSON.stringify(todayEntries));
@@ -990,15 +1101,12 @@ function deleteEntry(id) {
             if (db) {
                 db.ref(`records/${activeDateKey}/${id}`).remove();
             }
-            
             calculateAndRenderAll();
-        }       
-         
-        
-        
+        }
 
-        function sendDailySummaryReport(ownerPhoneNo) {
-            if (!ownerPhoneNo) return alert("মালিকের হোয়াটসঅ্যাপ নম্বর দিন!");
+        // Fixed Permanent WhatsApp Report to 9153292689
+        function sendDailySummaryReport() {
+            const ownerPhoneNo = "919153292689"; // 9153292689 with country code 91
             let totalDayCollection = todayEntries.filter(e => e.type === 'service').reduce((s, e) => s + e.amount, 0);
             let summaryMessage = `📊 *M.city STYLE SALOON - দৈনিক হিসাব* 📊\nতারিখ: ${activeDateKey}\n\n💰 মোট কালেকশন: ₹${totalDayCollection}\n\nধন্যবাদ!`;
             window.open(`https://wa.me/${ownerPhoneNo}?text=${encodeURIComponent(summaryMessage)}`, '_blank');
