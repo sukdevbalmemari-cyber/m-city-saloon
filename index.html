@@ -79,7 +79,7 @@
         </header>
 
         <main class="max-w-5xl mx-auto p-4 space-y-6">
-            <!-- ক্যালেন্ডার বার -->
+            <!-- ক্যালেন্ডার ও সারা বছর / অ্যাডমিন ড্যাশবোর্ড অপশন -->
             <div class="bg-slate-800 border-2 border-amber-500/40 p-3 rounded-xl flex flex-wrap items-center justify-between gap-3 shadow-lg">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-sm">
@@ -93,6 +93,7 @@
                 <div class="flex items-center gap-2">
                     <span id="activeDateBadge" class="text-xs px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30"></span>
                     <button onclick="setTodayDate()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-2.5 py-1 rounded-lg">আজকের দিন</button>
+                    <button id="adminYearlyReportBtn" onclick="openYearlyCalendarModal()" class="hidden text-xs bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-2.5 py-1 rounded-lg shadow">সারা বছরের হিসাব</button>
                 </div>
             </div>
 
@@ -129,7 +130,7 @@
                 <div id="billListContainer" class="space-y-2 mt-2"></div>
             </div>
 
-            <!-- কারিগরের অগ্রিম শোধ / ফেরত এন্ট্রি (শুধু মালিকের জন্য) -->
+            <!-- কারিগরের অগ্রিম শোধ / ফেরত (Advance Return) -->
             <div id="adminAdvanceReturnSection" class="hidden bg-slate-800 border border-slate-700 p-4 rounded-xl shadow space-y-3">
                 <h3 class="text-sm font-semibold text-emerald-400 flex items-center gap-1.5">
                     <i class="fa-solid fa-rotate-left"></i> কারিগরের অগ্রিম শোধ / ফেরত (Advance Return)
@@ -157,7 +158,7 @@
                 </div>
             </section>
 
-            <!-- এন্ট্রি ফর্ম ও খরচ -->
+            <!-- এন্ট্রি ফর্ম ও খরচ (কারিগর প্যানেলে ছোটখাটো খরচ হাইড/টগল অপশন সহ) -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl shadow">
                     <h3 class="text-sm font-semibold text-slate-200 mb-3 flex items-center gap-1.5">
@@ -193,14 +194,18 @@
                     </div>
                 </div>
 
+                <!-- দোকান খরচ ও চা-নাস্তা এন্ট্রি (টগল/হাইড অপশনসহ) -->
                 <div id="expenseBox" class="bg-slate-800 border border-slate-700 p-4 rounded-xl shadow flex flex-col justify-between">
                     <div>
-                        <h3 class="text-sm font-semibold text-slate-200 mb-3 flex items-center gap-1.5">
-                            <i class="fa-solid fa-receipt text-rose-400"></i> দোকান খরচ এন্ট্রি
-                        </h3>
-                        <div class="space-y-3">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-1.5">
+                                <i class="fa-solid fa-receipt text-rose-400"></i> দোকান খরচ এন্ট্রি
+                            </h3>
+                            <button onclick="toggleExpenseSection()" class="text-xs text-amber-400 underline focus:outline-none">টগল / হাইড</button>
+                        </div>
+                        <div id="expenseFormContent" class="space-y-3">
                             <div>
-                                <label class="block text-xs text-slate-400 mb-1">খরচের বিবরণ</label>
+                                <label class="block text-xs text-slate-400 mb-1">খরচের বিবরণ (যেমন: চা, ব্লেড)</label>
                                 <input type="text" id="expenseReason" placeholder="চা, ব্লেড..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-slate-200 focus:outline-none">
                             </div>
                             <div class="grid grid-cols-2 gap-2">
@@ -271,7 +276,7 @@
                 </div>
             </div>
 
-            <!-- হোয়াটসঅ্যাপ রিপোর্ট প্যানেল (Fixed Permanent Number 9153292689) -->
+            <!-- হোয়াটসঅ্যাপ রিপোর্ট প্যানেল -->
             <div class="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-lg">
                 <h2 class="text-xl font-bold text-center text-amber-400 mb-6">দৈনিক হিসাব ও হোয়াটসঅ্যাপ রিপোর্ট প্যানেল</h2>
                 <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 flex flex-col md:flex-row justify-between items-center gap-4">
@@ -285,6 +290,19 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- সারা বছরের ক্যালেন্ডার ও ইনকাম রিপোর্ট মোডাল -->
+    <div id="yearlyCalendarModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 max-w-2xl w-full space-y-4 max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="text-base font-bold text-amber-400"><i class="fa-solid fa-calendar-days mr-1"></i> সারা বছরের ইনকাম ও ব্যবসার হিসাব</h3>
+                <button onclick="closeYearlyCalendarModal()" class="text-rose-400 text-xs font-bold px-2.5 py-1 rounded bg-slate-900">বন্ধ করুন</button>
+            </div>
+            <div id="yearlySummaryContent" class="space-y-3 text-xs text-slate-300">
+                <!-- ডায়নামিক সারা বছরের ডেটা লোড হবে -->
+            </div>
+        </div>
     </div>
 
     <!-- ছবির প্রিভিউ মোডাল -->
@@ -333,7 +351,7 @@
         </div>
     </div>
 
-    <!-- মোডাল ২: অগ্রিম (মালিকের জন্য) - মাধ্যম: অনলাইন / মালিকের ক্যাশ বা নিজের ড্রয়ার -->
+    <!-- মোডাল ২: অগ্রিম খাতা -->
     <div id="advanceModal" class="hidden fixed inset-0 bg-black/75 flex items-center justify-center p-4 z-50">
         <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 max-w-sm w-full space-y-3">
             <h3 class="text-base font-bold text-sky-400">অগ্রিম বা খোরচাপাতি এন্ট্রি</h3>
@@ -346,7 +364,7 @@
                 <input type="number" id="advAmountInput" placeholder="500" min="0" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-slate-200 focus:outline-none">
             </div>
             <div>
-                <label class="block text-xs text-slate-400 mb-1">টাকা কোথা থেকে?</label>
+                <label class="block text-xs text-slate-400 mb-1">টাকা কোন ড্রয়ার থেকে?</label>
                 <select id="advSourceSelect" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-slate-200 focus:outline-none">
                     <option value="Online">অনলাইন / মালিকের ক্যাশ</option>
                     <option value="drawer_self">তার নিজের ড্রয়ার</option>
@@ -577,6 +595,7 @@
 
             const billSec = document.getElementById('adminBillReminderSection');
             const retSec = document.getElementById('adminAdvanceReturnSection');
+            const yearBtn = document.getElementById('adminYearlyReportBtn');
 
             if (user.role === 'admin') {
                 document.getElementById('adminTotalStatsSection').classList.remove('hidden');
@@ -587,6 +606,7 @@
                 document.getElementById('staffRequestAdvanceBtn').classList.add('hidden');
                 if (billSec) billSec.classList.remove('hidden');
                 if (retSec) retSec.classList.remove('hidden');
+                if (yearBtn) yearBtn.classList.remove('hidden');
             } else {
                 document.getElementById('adminTotalStatsSection').classList.add('hidden');
                 document.getElementById('expenseBox').classList.add('hidden');
@@ -596,6 +616,7 @@
                 document.getElementById('staffRequestAdvanceBtn').classList.remove('hidden');
                 if (billSec) billSec.classList.add('hidden');
                 if (retSec) retSec.classList.add('hidden');
+                if (yearBtn) yearBtn.classList.add('hidden');
                 document.getElementById('entryStaffSelect').value = user.id;
                 document.getElementById('entryStaffSelect').disabled = true;
             }
@@ -624,6 +645,11 @@
             } else alert('ভুল পিন!');
         }
 
+        function toggleExpenseSection() {
+            const content = document.getElementById('expenseFormContent');
+            if (content) content.classList.toggle('hidden');
+        }
+
         function saveStaffOpeningDrawer(staffId) {
             const inputEl = document.getElementById(`openingCash_${staffId}`);
             if (!inputEl) return;
@@ -640,7 +666,7 @@
             }
         }
         
-        function renderStaffDrawers() {
+                function renderStaffDrawers() {
             const container = document.getElementById('staffDrawersContainer');
             if (!container) return;
             container.innerHTML = '';
@@ -676,12 +702,52 @@
                             <span class="text-[11px] text-emerald-300">ড্রয়ারে থাকা ক্যাশ:</span>
                             <span class="text-lg font-black text-emerald-400">₹${currentDrawerCash}</span>
                         </div>
+                        <!-- ড্রয়ার বেসিস লাইট কালার খরচা বাতি (চা, নাস্তা, পানি) এন্ট্রি প্যানেল -->
+                        <div class="bg-amber-50/10 border border-amber-200/30 p-3 rounded-lg space-y-2">
+                            <span class="text-xs font-semibold text-amber-300 flex items-center gap-1"><i class="fa-solid fa-mug-hot"></i> ড্রয়ার খরচ (চা, নাস্তা, পানি):</span>
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <input type="text" id="drawerExpReason_${st.id}" placeholder="চা, জল..." class="bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-slate-200 focus:outline-none">
+                                <input type="number" id="drawerExpAmount_${st.id}" placeholder="টাকা (₹)" min="0" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-slate-200 focus:outline-none">
+                            </div>
+                            <button onclick="addDrawerExpense('${st.id}')" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-1.5 rounded text-xs transition">ড্রয়ার থেকে খরচ কাটুন</button>
+                        </div>
                     </div>
                 `;
             });
         }
 
-        // Bill Reminder & Photo Modal Viewing Functions
+        function addDrawerExpense(staffId) {
+            const reasonInput = document.getElementById(`drawerExpReason_${staffId}`);
+            const amountInput = document.getElementById(`drawerExpAmount_${staffId}`);
+            if (!reasonInput || !amountInput) return;
+
+            const reason = reasonInput.value.trim() || 'চা, নাস্তা বা জল খরচ';
+            const amount = parseFloat(amountInput.value) || 0;
+
+            if (amount <= 0) return alert('সঠিক টাকার অঙ্ক দিন!');
+
+            const newExp = {
+                id: 'rec_' + Date.now(),
+                type: 'expense',
+                reason,
+                amount,
+                source: `drawer_${staffId}`,
+                staffId,
+                time: new Date().toLocaleTimeString('bn-IN', { hour: '2-digit', minute: '2-digit' })
+            };
+
+            todayEntries.push(newExp);
+            localStorage.setItem('salon_records_' + activeDateKey, JSON.stringify(todayEntries));
+            if (db) db.ref(`records/${activeDateKey}/${newExp.id}`).set(newExp);
+
+            reasonInput.value = '';
+            amountInput.value = '';
+            calculateAndRenderAll();
+            alert('ড্রয়ার থেকে খরচ সফলভাবে কাটা হলো!');
+        }
+
+
+        // Bill Reminder & Photo Modal
         function saveBillReminder() {
             const name = document.getElementById('billNameInput').value.trim();
             const amount = parseFloat(document.getElementById('billAmountInput').value) || 0;
@@ -900,10 +966,9 @@
 
                 let payoutText = '';
 
+                let rawPay = 0;
                 if (st.type === 'daily_50') {
-                    const rawPay = Math.round(totalWork * 0.5);
-                    const netPayable = Math.max(0, rawPay + retainedAmount - netAdvance);
-                    payoutText = `<span class="text-amber-400 font-bold">নিট পাওনা: ₹${netPayable}</span> <span class="text-[10px] text-slate-400 block">(কমিশন: ₹${rawPay} + জমা: ₹${retainedAmount} - অগ্রিম: ₹${netAdvance})</span>`;
+                    rawPay = Math.round(totalWork * 0.5);
                 } else {
                     const monthlyBase = st.salary || 4000;
                     const dailyBase = monthlyBase / 30;
@@ -913,8 +978,17 @@
                     } else if (currentAtt === 'absent') {
                         calculatedPay = Math.round(monthlyBase - dailyBase);
                     }
-                    const netMonthly = Math.max(0, Math.round(calculatedPay) + retainedAmount - netAdvance);
-                    payoutText = `<span class="text-sky-400 font-bold">নিট পাওনা: ₹${netMonthly}</span> <span class="text-[10px] text-slate-400 block">(বেতন: ₹${Math.round(calculatedPay)} + জমা: ₹${retainedAmount} - অগ্রিম: ₹${netAdvance})</span>`;
+                    rawPay = Math.round(calculatedPay);
+                }
+
+                const totalCredit = rawPay + retainedAmount;
+                const diff = totalCredit - netAdvance;
+
+                if (diff >= 0) {
+                    payoutText = `<span class="text-amber-400 font-bold">${st.name} পাবে: ₹${diff}</span> <span class="text-[10px] text-slate-400 block">(${st.type === 'daily_50' ? 'কমিশন' : 'বেতন'}: ₹${rawPay} + জমা: ₹${retainedAmount} - অগ্রিম: ₹${netAdvance})</span>`;
+                } else {
+                    const ownerGets = Math.abs(diff);
+                    payoutText = `<span class="text-rose-400 font-bold">মালিক পাবে: ₹${ownerGets}</span> <span class="text-[10px] text-slate-400 block">(${st.type === 'daily_50' ? 'কমিশন' : 'বেতন'}: ₹${rawPay} + জমা: ₹${retainedAmount} - অগ্রিম: ₹${netAdvance})</span>`;
                 }
 
                 const attSelect = `
@@ -1188,6 +1262,242 @@
                 db.ref(`records/${activeDateKey}/${id}`).remove();
             }
             calculateAndRenderAll();
+        }
+
+        // সারা বছরের বা নির্দিষ্ট মাসের হিসাবের উইন্ডোতে কারিগরদের মোট কাজ, অগ্রিম এবং আসল "নিট পাওনা" (Net Payable) হিসাব যুক্ত করা হলো
+        function openYearlyCalendarModal() {
+            const container = document.getElementById('yearlySummaryContent');
+            if (!container) return;
+            
+            // Render modal container with filters if not already done
+            document.getElementById('yearlyCalendarModal').classList.remove('hidden');
+            renderYearlyReportContent();
+        }
+
+        function renderYearlyReportContent() {
+            const container = document.getElementById('yearlySummaryContent');
+            if (!container) return;
+
+            // Get selected year and month from filter elements if they exist, else defaults
+            let selectedYear = document.getElementById('filterYearSelect') ? document.getElementById('filterYearSelect').value : 'all';
+            let selectedMonth = document.getElementById('filterMonthSelect') ? document.getElementById('filterMonthSelect').value : 'all';
+
+            let allKeys = Object.keys(localStorage);
+            let recordKeys = allKeys.filter(k => k.startsWith('salon_records_'));
+
+            // Extract available years from record keys
+            let availableYears = new Set();
+            recordKeys.forEach(rk => {
+                let dKey = rk.replace('salon_records_', ''); // YYYY-MM-DD
+                let yr = dKey.split('-')[0];
+                if (yr) availableYears.add(yr);
+            });
+            if (availableYears.size === 0) availableYears.add(new Date().getFullYear().toString());
+            let sortedYears = Array.from(availableYears).sort().reverse();
+
+            if (selectedYear === 'all' && sortedYears.length > 0) {
+                // default to latest year or keep all
+            }
+
+            let totalCollection = 0;
+            let totalExpense = 0;
+            let dateWiseSummary = {};
+            let staffWork = {};
+            let staffAdvance = {};
+            let staffReturn = {};
+
+            localStaffList.forEach(st => {
+                staffWork[st.id] = 0;
+                staffAdvance[st.id] = 0;
+                staffReturn[st.id] = 0;
+            });
+
+            recordKeys.forEach(rk => {
+                let dKey = rk.replace('salon_records_', ''); // YYYY-MM-DD
+                let parts = dKey.split('-');
+                let yr = parts[0];
+                let mn = parts[1];
+
+                // Apply filters
+                if (selectedYear !== 'all' && yr !== selectedYear) return;
+                if (selectedMonth !== 'all' && mn !== selectedMonth) return;
+
+                let recs = JSON.parse(localStorage.getItem(rk) || '[]');
+                let dayColl = 0;
+                let dayExp = 0;
+                recs.forEach(r => {
+                    if (r.type === 'service') {
+                        dayColl += r.amount;
+                        if (r.staffId && staffWork[r.staffId] !== undefined) {
+                            staffWork[r.staffId] += r.amount;
+                        }
+                    }
+                    if (r.type === 'expense') dayExp += r.amount;
+                    if (r.type === 'advance') {
+                        if (r.staffId && staffAdvance[r.staffId] !== undefined) {
+                            staffAdvance[r.staffId] += r.amount;
+                        }
+                    }
+                    if (r.type === 'advance_return') {
+                        if (r.staffId && staffReturn[r.staffId] !== undefined) {
+                            staffReturn[r.staffId] += r.amount;
+                        }
+                    }
+                });
+                totalCollection += dayColl;
+                totalExpense += dayExp;
+                dateWiseSummary[dKey] = { coll: dayColl, exp: dayExp, count: recs.length };
+            });
+
+            // Calculate total staff payouts for P&L
+            let totalStaffPayouts = 0;
+            localStaffList.forEach(st => {
+                let wSum = staffWork[st.id] || 0;
+                if (st.type === 'daily_50') {
+                    totalStaffPayouts += Math.round(wSum * 0.5);
+                } else {
+                    let multiplier = (selectedMonth !== 'all') ? 1 : 12;
+                    totalStaffPayouts += (st.salary || 4000) * multiplier;
+                }
+            });
+
+            let netProfit = totalCollection - totalExpense - totalStaffPayouts;
+
+            // Build filter HTML dropdowns
+            let yearOptions = `<option value="all" ${selectedYear === 'all' ? 'selected' : ''}>সারা বছর (সব বছর)</option>`;
+            sortedYears.forEach(y => {
+                yearOptions += `<option value="${y}" ${selectedYear === y ? 'selected' : ''}>${y}</option>`;
+            });
+
+            let monthsList = [
+                {v: 'all', n: 'সারা বছর (সব মাস)'},
+                {v: '01', n: 'জানুয়ারি'}, {v: '02', n: 'ফেব্রুয়ারি'}, {v: '03', n: 'মার্চ'},
+                {v: '04', n: 'এপ্রিল'}, {v: '05', n: 'মে'}, {v: '06', n: 'জুন'},
+                {v: '07', n: 'জুলাই'}, {v: '08', n: 'আগস্ট'}, {v: '09', n: 'সেপ্টেম্বর'},
+                {v: '10', n: 'অক্টোবর'}, {v: '11', n: 'নভেম্বর'}, {v: '12', n: 'ডিসেম্বর'}
+            ];
+            let monthOptions = '';
+            monthsList.forEach(m => {
+                monthOptions += `<option value="${m.v}" ${selectedMonth === m.v ? 'selected' : ''}>${m.n}</option>`;
+            });
+
+            let html = `
+                <!-- ক্যালেন্ডার ফিল্টার বার -->
+                <div class="bg-slate-900 p-3 rounded-lg border border-slate-700 flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <div class="flex items-center gap-2">
+                        <label class="text-[11px] text-slate-400">বছর:</label>
+                        <select id="filterYearSelect" onchange="renderYearlyReportContent()" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-amber-400 font-bold focus:outline-none">
+                            ${yearOptions}
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-[11px] text-slate-400">মাস:</label>
+                        <select id="filterMonthSelect" onchange="renderYearlyReportContent()" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-amber-400 font-bold focus:outline-none">
+                            ${monthOptions}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="bg-slate-900 p-3 rounded-lg border border-slate-700">
+                        <span class="text-slate-400 block">মোট কালেকশন (Income)</span>
+                        <strong class="text-amber-400 text-lg">₹${totalCollection}</strong>
+                    </div>
+                    <div class="bg-slate-900 p-3 rounded-lg border border-slate-700">
+                        <span class="text-slate-400 block">মোট খরচ (Expenses)</span>
+                        <strong class="text-rose-400 text-lg">₹${totalExpense}</strong>
+                    </div>
+                </div>
+
+                <!-- লাভ-ক্ষতি স্টেটমেন্ট (Profit & Loss Statement) -->
+                <div class="bg-slate-900 border border-amber-500/40 p-4 rounded-xl mb-4 space-y-2">
+                    <h4 class="font-bold text-amber-400 flex items-center gap-1.5"><i class="fa-solid fa-chart-pie"></i> লাভ-ক্ষতি স্টেটমেন্ট (P&L Statement)</h4>
+                    <div class="flex justify-between text-xs text-slate-300 border-b border-slate-800 pb-1.5">
+                        <span>মোট আয় / কালেকশন:</span>
+                        <span class="font-bold text-emerald-400">+₹${totalCollection}</span>
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-300 border-b border-slate-800 pb-1.5">
+                        <span>মাইনাস: দোকান খরচ:</span>
+                        <span class="font-bold text-rose-400">-₹${totalExpense}</span>
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-300 border-b border-slate-800 pb-1.5">
+                        <span>মাইনাস: কারিগরদের পাওনা (কমিশন/বেতন):</span>
+                        <span class="font-bold text-rose-400">-₹${totalStaffPayouts}</span>
+                    </div>
+                    <div class="flex justify-between text-sm pt-1">
+                        <span class="font-bold text-amber-300">মালিকের নিট লাভ (Net Profit):</span>
+                        <span class="font-black ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}">₹${netProfit}</span>
+                    </div>
+                </div>
+
+                <h4 class="font-bold text-slate-200 mt-3 mb-1">কারিগরদের কাজের পরিমাণ, অগ্রিম ও নিট পাওনা / মালিক পাবে:</h4>
+                <div class="space-y-2 mb-4">
+            `;
+
+            localStaffList.forEach(st => {
+                let wSum = staffWork[st.id] || 0;
+                let aSum = staffAdvance[st.id] || 0;
+                let rSum = staffReturn[st.id] || 0;
+                let netAdv = Math.max(0, aSum - rSum);
+
+                let rawEarn = 0;
+                if (st.type === 'daily_50') {
+                    rawEarn = Math.round(wSum * 0.5);
+                } else {
+                    let multiplier = (selectedMonth !== 'all') ? 1 : 12;
+                    rawEarn = (st.salary || 4000) * multiplier;
+                }
+
+                let totalCr = rawEarn + 0; // retained if any
+                let diff = totalCr - netAdv;
+
+                let statusText = '';
+                if (diff >= 0) {
+                    statusText = `<span class="text-emerald-400 font-bold block">${st.name} পাবে: ₹${diff}</span>`;
+                } else {
+                    statusText = `<span class="text-rose-400 font-bold block">মালিক পাবে: ₹${Math.abs(diff)}</span>`;
+                }
+
+                html += `
+                    <div class="bg-slate-900 p-3 rounded-lg flex justify-between items-center border border-slate-700 text-xs">
+                        <div>
+                            <strong class="text-amber-300 text-sm">${st.name}</strong>
+                            <span class="text-[10px] text-slate-400 block">চুক্তি: ${st.type === 'daily_50' ? '৫০-৫০ ভাগ' : 'মাসিক মাইনে'}</span>
+                        </div>
+                        <div class="text-right space-y-0.5">
+                            <span class="text-sky-300 block">মোট কাজ: <strong>₹${wSum}</strong></span>
+                            <span class="text-rose-400 block">নেওয়া অগ্রিম: <strong>₹${netAdv}</strong></span>
+                            ${statusText}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>
+                <h4 class="font-bold text-slate-200 mt-2">তারিখ অনুযায়ী বিগত হিসাবসমূহ:</h4>
+                <div class="space-y-1.5 max-h-40 overflow-y-auto">
+            `;
+
+            let sortedDates = Object.keys(dateWiseSummary).sort().reverse();
+            if (sortedDates.length === 0) {
+                html += `<p class="text-slate-400 text-xs">কোনো হিসাব পাওয়া যায়নি।</p>`;
+            } else {
+                sortedDates.forEach(dt => {
+                    let d = dateWiseSummary[dt];
+                    html += `
+                        <div class="bg-slate-900 p-2.5 rounded flex justify-between items-center text-xs border border-slate-700">
+                            <div><strong class="text-amber-300">${dt}</strong> <span class="text-[10px] text-slate-400">(${d.count}টি এন্ট্রি)</span></div>
+                            <div>লেকশন: <strong class="text-emerald-400">₹${d.coll}</strong> | খরচ: <strong class="text-rose-400">₹${d.exp}</strong></div>
+                        </div>
+                    `;
+                });
+            }
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        function closeYearlyCalendarModal() {
+            document.getElementById('yearlyCalendarModal').classList.add('hidden');
         }
 
         function sendDailySummaryReport() {
