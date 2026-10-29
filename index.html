@@ -1240,12 +1240,21 @@
                     descText = `খরচ: ${descText}`;
                 }
 
+                let sourceDisplay = item.method || item.source || '-';
+                if (item.source && item.source.startsWith('drawer_')) {
+                    let drawerStaffId = item.source.replace('drawer_', '');
+                    let drawerStaffObj = localStaffList.find(s => s.id === drawerStaffId);
+                    sourceDisplay = drawerStaffObj ? `${drawerStaffObj.name}-এর ড্রয়ার` : 'ড্রয়ার খরচ';
+                } else if (item.source === 'Online') {
+                    sourceDisplay = 'অনলাইন / মালিকের পকেট';
+                }
+
                 tbody.innerHTML += `
                     <tr>
                         <td class="p-2 text-slate-400">${item.time}</td>
                         <td class="p-2">${item.type}</td>
                         <td class="p-2 text-slate-200">${descText}</td>
-                        <td class="p-2 text-slate-400">${item.method || item.source || '-'}</td>
+                        <td class="p-2 text-slate-400">${sourceDisplay}</td>
                         <td class="p-2 text-right font-bold">₹${item.amount}</td>
                         ${actionCell}
                     </tr>
