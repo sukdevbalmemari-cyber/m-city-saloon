@@ -551,7 +551,7 @@
                     }
                 });
                 db.ref(`records/${activeDateKey}`).on('value', snap => {
-                    const val = snap.val();
+                    const val = snapshot.val();
                     todayEntries = [];
                     if (val) Object.keys(val).forEach(k => todayEntries.push({ id: k, ...val[k] }));
                     localStorage.setItem('salon_records_' + activeDateKey, JSON.stringify(todayEntries));
@@ -702,9 +702,9 @@
                             <span class="text-[11px] text-emerald-300">ড্রয়ারে থাকা ক্যাশ:</span>
                             <span class="text-lg font-black text-emerald-400">₹${currentDrawerCash}</span>
                         </div>
-                        <!-- ড্রয়ার বেসিস লাইট কালার খরচা বাতি (চা, নাস্তা, পানি) এন্ট্রি প্যানেল -->
+                        <!-- ড্রয়ার বেসিস লাইট কালার খরচা বাতি এন্ট্রি প্যানেল -->
                         <div class="bg-amber-50/10 border border-amber-200/30 p-3 rounded-lg space-y-2">
-                            <span class="text-xs font-semibold text-amber-300 flex items-center gap-1"><i class="fa-solid fa-mug-hot"></i> ড্রয়ার খরচ (চা, নাস্তা, পানি):</span>
+                            <span class="text-xs font-semibold text-amber-300 flex items-center gap-1"><i class="fa-solid fa-mug-hot"></i> ড্রয়ার খরচ:</span>
                             <div class="grid grid-cols-2 gap-1.5">
                                 <input type="text" id="drawerExpReason_${st.id}" placeholder="চা, জল..." class="bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-slate-200 focus:outline-none">
                                 <input type="number" id="drawerExpAmount_${st.id}" placeholder="টাকা (₹)" min="0" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-slate-200 focus:outline-none">
@@ -953,32 +953,66 @@
             tbody.innerHTML = '';
             const displayStaff = (!currentUser || currentUser.role === 'admin') ? localStaffList : localStaffList.filter(s => s.id === currentUser.id);
 
+            // Calculate current month accumulated advance and work up to activeDateKey for monthly salary staff
+            let parts = activeDateKey.split('-');
+            let curYear = parseInt(parts[0]);
+            let curMonth = parseInt(parts[1]);
+            let curDay = parseInt(parts[2]);
+            let daysInMonth = new Date(curYear, curMonth, 0).getDate();
+
             displayStaff.forEach(st => {
                 const currentAtt = staffAttendance[st.id] || 'full';
                 const totalWork = todayEntries.filter(e => e.type === 'service' && e.staffId === st.id).reduce((s, e) => s + e.amount, 0);
         
-                const totalAdvance = todayEntries.filter(e => e.type === 'advance' && e.staffId === st.id).reduce((s, e) => s + e.amount, 0);
-                const totalReturn = todayEntries.filter(e => e.type === 'advance_return' && e.staffId === st.id).reduce((s, e) => s + e.amount, 0);
-                const netAdvance = Math.max(0, totalAdvance - totalReturn);
+                // Cumulative advance and return for the current month up to activeDateKey
+                let monthAdvance = 0;
+                let monthReturn = 0;
+                let monthWork = 0;
+
+                Object.keys(localStorage).forEach(k => {
+                    if (k.startsWith('salon_records_')) {
+                        let dKey = k.replace('salon_records_', '');
+                        let dParts = dKey.split('-');
+                        let y = parseInt(dParts[0]);
+                        let m = parseInt(dParts[1]);
+                        let d = parseInt(dParts[2]);
+
+                        // Check if it belongs to current month and up to activeDateKey
+                        if (y === curYear && m === curMonth && d <= curDay) {
+                            try {
+                                let recs = JSON.parse(localStorage.getItem(k) || '[]');
+                                recs.forEach(r => {
+                                    if (r.staffId === st.id) {
+                                        if (r.type === 'advance') monthAdvance += r.amount;
+                                        if (r.type === 'advance_return') monthReturn += r.amount;
+                                        if (r.type === 'service') monthWork += r.amount;
+                                    }
+                                });
+                            } catch(e) {}
+                        }
+                    }
+                });
+
+                const netAdvance = Math.max(0, monthAdvance - monthReturn);
 
                 const retainedKey = `salon_retained_${activeDateKey}_${st.id}`;
                 const retainedAmount = parseFloat(localStorage.getItem(retainedKey)) || 0;
 
                 let payoutText = '';
-
                 let rawPay = 0;
+
                 if (st.type === 'daily_50') {
                     rawPay = Math.round(totalWork * 0.5);
                 } else {
                     const monthlyBase = st.salary || 4000;
-                    const dailyBase = monthlyBase / 30;
-                    let calculatedPay = monthlyBase;
+                    // Proportionate salary up to current day of the month
+                    let earnedMonthly = (monthlyBase / daysInMonth) * curDay;
                     if (currentAtt === 'half') {
-                        calculatedPay = Math.round(monthlyBase - (dailyBase * 0.5));
+                        earnedMonthly -= (monthlyBase / daysInMonth) * 0.5;
                     } else if (currentAtt === 'absent') {
-                        calculatedPay = Math.round(monthlyBase - dailyBase);
+                        earnedMonthly -= (monthlyBase / daysInMonth);
                     }
-                    rawPay = Math.round(calculatedPay);
+                    rawPay = Math.max(0, Math.round(earnedMonthly));
                 }
 
                 const totalCredit = rawPay + retainedAmount;
@@ -1208,11 +1242,22 @@
 
         function deleteStaff(id) {
             if (!currentUser || currentUser.role !== 'admin') return;
-            if (confirm('মুছে ফেলতে চান?')) {
+            if (confirm('এই কারিগরকে কি পাকাপাকিভাবে মুছে ফেলতে চান?')) {
+                // ১. লোকাল লিস্ট থেকে ফিল্টার করে বাদ দেওয়া
                 localStaffList = localStaffList.filter(s => s.id !== id);
                 localStorage.setItem('salon_staff', JSON.stringify(localStaffList));
+                
+                // ২. ফায়ারবেস ডেটাবেস থেকেও পাকাপাকিভাবে মুছে ফেলা
+                if (db) {
+                    db.ref('staff/' + id).remove().then(() => {
+                        // ফায়ারবেসের মেইন staff অবজেক্ট আপডেট করা
+                        db.ref('staff').set(localStaffList.reduce((acc, cur) => ({ ...acc, [cur.id]: cur }), {}));
+                    });
+                }
+
                 updateStaffDropdowns();
                 renderStaffTable();
+                alert('কারিগর সফলভাবে মুছে ফেলা হয়েছে!');
             }
         }
 
@@ -1240,21 +1285,12 @@
                     descText = `খরচ: ${descText}`;
                 }
 
-                let sourceDisplay = item.method || item.source || '-';
-                if (item.source && item.source.startsWith('drawer_')) {
-                    let drawerStaffId = item.source.replace('drawer_', '');
-                    let drawerStaffObj = localStaffList.find(s => s.id === drawerStaffId);
-                    sourceDisplay = drawerStaffObj ? `${drawerStaffObj.name}-এর ড্রয়ার` : 'ড্রয়ার খরচ';
-                } else if (item.source === 'Online') {
-                    sourceDisplay = 'অনলাইন / মালিকের পকেট';
-                }
-
                 tbody.innerHTML += `
                     <tr>
                         <td class="p-2 text-slate-400">${item.time}</td>
                         <td class="p-2">${item.type}</td>
                         <td class="p-2 text-slate-200">${descText}</td>
-                        <td class="p-2 text-slate-400">${sourceDisplay}</td>
+                        <td class="p-2 text-slate-400">${item.method || item.source || '-'}</td>
                         <td class="p-2 text-right font-bold">₹${item.amount}</td>
                         ${actionCell}
                     </tr>
@@ -1496,7 +1532,7 @@
                     html += `
                         <div class="bg-slate-900 p-2.5 rounded flex justify-between items-center text-xs border border-slate-700">
                             <div><strong class="text-amber-300">${dt}</strong> <span class="text-[10px] text-slate-400">(${d.count}টি এন্ট্রি)</span></div>
-                            <div>লেকশন: <strong class="text-emerald-400">₹${d.coll}</strong> | খরচ: <strong class="text-rose-400">₹${d.exp}</strong></div>
+                            <div>কালেকশন: <strong class="text-emerald-400">₹${d.coll}</strong> | খরচ: <strong class="text-rose-400">₹${d.exp}</strong></div>
                         </div>
                     `;
                 });
