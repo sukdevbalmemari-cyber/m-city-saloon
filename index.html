@@ -97,19 +97,19 @@
                 </div>
             </div>
 
-            <!-- পেন্ডিং অগ্রিম রিকোয়েস্ট (শুধু মালিকের জন্য) -->
+            <!-- পেন্ডিং রিকোয়েস্ট (শুধু মালিকের জন্য) -->
             <div id="adminPendingRequestsContainer" class="hidden bg-sky-950/40 border border-sky-800/60 p-4 rounded-xl shadow space-y-3">
                 <h3 class="text-sm font-semibold text-sky-300 flex items-center gap-1.5">
-                    <i class="fa-solid fa-bell"></i> কারিগরদের অগ্রিম (খোরচাপাতি) রিকোয়েস্ট তালিকা
+                    <i class="fa-solid fa-bell"></i> কারিগরদের রিকোয়েস্ট তালিকা (অগ্রিম ও ড্রয়ার খরচ)
                 </h3>
                 <div id="pendingRequestsList" class="space-y-2"></div>
             </div>
 
-            <!-- কারিগর ড্রয়ার -->
+            <!-- কারিগর ড্রয়ার (ওপেনিং ক্যাশ যোগসহ) -->
             <section class="space-y-3">
                 <div class="flex justify-between items-center">
                     <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-1.5">
-                        <i class="fa-solid fa-cash-register text-emerald-400"></i> কারিগরদের আলাদা আলাদা ক্যাশ ড্রয়ার
+                        <i class="fa-solid fa-cash-register text-emerald-400"></i> কারিগরদের আলাদা আলাদা ক্যাশ ড্রয়ার (রোলিং ব্যালেন্স)
                     </h3>
                 </div>
                 <div id="staffDrawersContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
@@ -194,12 +194,12 @@
                     </div>
                 </div>
 
-                <!-- দোকান খরচ ও চা-নাস্তা এন্ট্রি -->
+                <!-- দোকান খরচ ও খচ্চাপাতি এন্ট্রি -->
                 <div id="expenseBox" class="bg-slate-800 border border-slate-700 p-4 rounded-xl shadow flex flex-col justify-between">
                     <div>
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-1.5">
-                                <i class="fa-solid fa-receipt text-rose-400"></i> দোকান খরচ এন্ট্রি
+                                <i class="fa-solid fa-receipt text-rose-400"></i> দোকান খরচ / খচ্চাপাতি এন্ট্রি
                             </h3>
                             <button onclick="toggleExpenseSection()" class="text-xs text-amber-400 underline focus:outline-none">টগল / হাইড</button>
                         </div>
@@ -228,7 +228,7 @@
             <div id="staffSection" class="bg-slate-800 border border-slate-700 p-4 rounded-xl shadow">
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                     <h3 id="staffSectionTitle" class="text-sm font-semibold text-slate-200 flex items-center gap-1.5">
-                        <i class="fa-solid fa-users text-amber-400"></i> কারিগরদের হিসাব ও পাওনা
+                        <i class="fa-solid fa-users text-amber-400"></i> কারিগরদের হিসাব ও নির্দিষ্ট নামভিত্তিক পাওনা
                     </h3>
                     <div class="flex gap-2" id="staffActionControls">
                         <button onclick="openStaffModal()" class="text-xs bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-2.5 py-1.5 rounded transition">+ নতুন কারিগর</button>
@@ -245,7 +245,7 @@
                                 <th class="p-2.5">কাজের পরিমাণ</th>
                                 <th class="p-2.5">জমানো টাকা (Retained)</th>
                                 <th class="p-2.5">অগ্রিম (খোরচাপাতি)</th>
-                                <th class="p-2.5">নিট পাওনা / হিসাব</th>
+                                <th class="p-2.5">নিট পাওনা / মালিক পাবে</th>
                                 <th class="p-2.5 text-center" id="staffTableClosingHead">অ্যাকশন</th>
                             </tr>
                         </thead>
@@ -266,7 +266,7 @@
                                 <th class="p-2">সময়</th>
                                 <th class="p-2">ধরণ</th>
                                 <th class="p-2">কারিগর / বিবরণ</th>
-                                <th class="p-2">ড্রয়ার</th>
+                                <th class="p-2">ড্রয়ার উৎস / মাধ্যম</th>
                                 <th class="p-2 text-right">টাকা</th>
                                 <th class="p-2 text-center" id="historyActionHead">অ্যাকশন</th>
                             </tr>
@@ -299,9 +299,7 @@
                 <h3 class="text-base font-bold text-amber-400"><i class="fa-solid fa-calendar-days mr-1"></i> সারা বছরের ইনকাম ও ব্যবসার হিসাব</h3>
                 <button onclick="closeYearlyCalendarModal()" class="text-rose-400 text-xs font-bold px-2.5 py-1 rounded bg-slate-900">বন্ধ করুন</button>
             </div>
-            <div id="yearlySummaryContent" class="space-y-3 text-xs text-slate-300">
-                <!-- ডায়নামিক সারা বছরের ডেটা লোড হবে -->
-            </div>
+            <div id="yearlySummaryContent" class="space-y-3 text-xs text-slate-300"></div>
         </div>
     </div>
 
@@ -671,6 +669,42 @@
             }
         }
         
+        function getCumulativeDrawerBalance(staffId, targetDateStr) {
+            let runningCash = 0;
+            let allKeys = Object.keys(localStorage).filter(k => k.startsWith('salon_records_') || k.startsWith('salon_drawers_'));
+            
+            let datesSet = new Set();
+            allKeys.forEach(k => {
+                let dt = k.replace('salon_records_', '').replace('salon_drawers_', '');
+                if (dt <= targetDateStr) datesSet.add(dt);
+            });
+            datesSet.add(targetDateStr);
+            let sortedDates = Array.from(datesSet).sort();
+
+            sortedDates.forEach(dt => {
+                let dOpening = 0;
+                let savedD = localStorage.getItem('salon_drawers_' + dt);
+                if (savedD) {
+                    try { let obj = JSON.parse(savedD); if (obj[staffId] !== undefined) dOpening = parseFloat(obj[staffId]) || 0; } catch(e){}
+                }
+                runningCash += dOpening;
+
+                let recs = JSON.parse(localStorage.getItem('salon_records_' + dt) || '[]');
+                recs.forEach(r => {
+                    if (r.type === 'service' && r.staffId === staffId && r.method === 'Cash') {
+                        runningCash += r.amount;
+                    }
+                    if (r.type === 'expense' && r.source === `drawer_${staffId}`) {
+                        runningCash -= r.amount;
+                    }
+                    if (r.type === 'advance' && r.staffId === staffId && r.source === 'drawer_self') {
+                        runningCash -= r.amount;
+                    }
+                });
+            });
+            return Math.max(0, runningCash);
+        }
+
         function renderStaffDrawers() {
             const container = document.getElementById('staffDrawersContainer');
             if (!container) return;
@@ -681,36 +715,34 @@
                 const opening = staffOpeningDrawers[st.id] || 0;
                 const cashWork = todayEntries.filter(e => e.type === 'service' && e.staffId === st.id && e.method === 'Cash').reduce((s, e) => s + e.amount, 0);
                 const upiWork = todayEntries.filter(e => e.type === 'service' && e.staffId === st.id && e.method === 'UPI').reduce((s, e) => s + e.amount, 0);
-                const drawerExpenses = todayEntries.filter(e => e.type === 'expense' && e.source === `drawer_${st.id}`).reduce((s, e) => s + e.amount, 0);
-                const drawerAdvances = todayEntries.filter(e => e.type === 'advance' && e.staffId === st.id && e.source === 'drawer_self').reduce((s, e) => s + e.amount, 0);
-
-                const currentDrawerCash = (opening + cashWork) - (drawerExpenses + drawerAdvances);
+                
+                const rollingDrawerCash = getCumulativeDrawerBalance(st.id, activeDateKey);
 
                 container.innerHTML += `
                     <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl shadow space-y-3">
                         <div class="flex justify-between items-center border-b border-slate-700 pb-2">
                             <span class="font-bold text-amber-400 text-sm">${st.name}-এর ড্রয়ার</span>
-                            <span class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded">${activeDateKey}</span>
+                            <span class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded">তারিখ: ${activeDateKey}</span>
                         </div>
                         <div class="flex items-center justify-between gap-2">
-                            <span class="text-xs text-slate-400">ওপেনিং ক্যাশ: ₹</span>
+                            <span class="text-xs text-slate-400">ওপেনিং ক্যাশ (সকালের): ₹</span>
                             <div class="flex items-center gap-1">
                                 <input type="number" id="openingCash_${st.id}" value="${opening}" class="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-center text-amber-300 font-bold focus:outline-none">
                                 <button onclick="saveStaffOpeningDrawer('${st.id}')" class="text-[11px] bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-2 py-1 rounded">সেভ</button>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-2 pt-1 text-xs">
-                            <div class="bg-slate-900/80 p-2 rounded"><span class="text-slate-400 block text-[10px]">নগদ জমা:</span><span class="font-bold text-emerald-400">+₹${cashWork}</span></div>
-                            <div class="bg-slate-900/80 p-2 rounded"><span class="text-slate-400 block text-[10px]">অনলাইন (UPI):</span><span class="font-bold text-sky-400">₹${upiWork}</span></div>
+                            <div class="bg-slate-900/80 p-2 rounded"><span class="text-slate-400 block text-[10px]">আজকের নগদ জমা:</span><span class="font-bold text-emerald-400">+₹${cashWork}</span></div>
+                            <div class="bg-slate-900/80 p-2 rounded"><span class="text-slate-400 block text-[10px]">আজকের অনলাইন (UPI):</span><span class="font-bold text-sky-400">₹${upiWork}</span></div>
                         </div>
                         <div class="bg-emerald-950/40 border border-emerald-800/60 p-2.5 rounded-lg flex justify-between items-center">
-                            <span class="text-[11px] text-emerald-300">ড্রয়ারে থাকা ক্যাশ:</span>
-                            <span class="text-lg font-black text-emerald-400">₹${currentDrawerCash}</span>
+                            <span class="text-[11px] text-emerald-300">ড্রয়ারে মোট ক্যাশ (রোলিং):</span>
+                            <span class="text-lg font-black text-emerald-400">₹${rollingDrawerCash}</span>
                         </div>
                         <div class="bg-amber-50/10 border border-amber-200/30 p-3 rounded-lg space-y-2">
-                            <span class="text-xs font-semibold text-amber-300 flex items-center gap-1"><i class="fa-solid fa-mug-hot"></i> ড্রয়ার খরচ (চা, নাস্তা, পানি):</span>
+                            <span class="text-xs font-semibold text-amber-300 flex items-center gap-1"><i class="fa-solid fa-mug-hot"></i> ড্রয়ার খরচ (চা, নাস্তা, খচ্চাপাতি):</span>
                             <div class="grid grid-cols-2 gap-1.5">
-                                <input type="text" id="drawerExpReason_${st.id}" placeholder="চা, জল..." class="bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-slate-200 focus:outline-none">
+                                <input type="text" id="drawerExpReason_${st.id}" placeholder="চা, খচ্চা..." class="bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-slate-200 focus:outline-none">
                                 <input type="number" id="drawerExpAmount_${st.id}" placeholder="টাকা (₹)" min="0" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-slate-200 focus:outline-none">
                             </div>
                             <button onclick="addDrawerExpense('${st.id}')" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-1.5 rounded text-xs transition">ড্রয়ার থেকে খরচ কাটুন</button>
@@ -720,34 +752,41 @@
             });
         }
 
+        // আপডেট করা ফাংশন: ড্রয়ার খরচ সরাসরি না কেটে পেন্ডিং রিকোয়েস্টে পাঠাবে
         function addDrawerExpense(staffId) {
             const reasonInput = document.getElementById(`drawerExpReason_${staffId}`);
             const amountInput = document.getElementById(`drawerExpAmount_${staffId}`);
             if (!reasonInput || !amountInput) return;
 
-            const reason = reasonInput.value.trim() || 'চা, নাস্তা বা জল খরচ';
+            const reason = reasonInput.value.trim() || 'চা, খচ্চাপাতি বা জল খরচ';
             const amount = parseFloat(amountInput.value) || 0;
 
             if (amount <= 0) return alert('সঠিক টাকার অঙ্ক দিন!');
+            let stObj = localStaffList.find(s => s.id === staffId);
+            let staffName = stObj ? stObj.name : 'কারিগর';
 
-            const newExp = {
-                id: 'rec_' + Date.now(),
-                type: 'expense',
+            const reqObj = {
+                id: 'req_' + Date.now(),
+                type: 'drawer_expense_request',
+                staffId,
+                staffName,
                 reason,
                 amount,
                 source: `drawer_${staffId}`,
-                staffId,
+                date: activeDateKey,
                 time: new Date().toLocaleTimeString('bn-IN', { hour: '2-digit', minute: '2-digit' })
             };
 
-            todayEntries.push(newExp);
-            localStorage.setItem('salon_records_' + activeDateKey, JSON.stringify(todayEntries));
-            if (db) db.ref(`records/${activeDateKey}/${newExp.id}`).set(newExp);
+            if (db) {
+                db.ref(`advance_requests/${reqObj.id}`).set(reqObj);
+            } else {
+                pendingRequests.push(reqObj);
+                renderPendingRequests();
+            }
 
             reasonInput.value = '';
             amountInput.value = '';
-            calculateAndRenderAll();
-            alert('ড্রয়ার থেকে খরচ সফলভাবে কাটা হলো!');
+            alert('ড্রয়ার খরচের রিকোয়েস্ট মালিকের কাছে পাঠানো হয়েছে। মালিক এপ্রুভ করলেই ড্রয়ার থেকে টাকা কাটা হবে!');
         }
 
         function saveBillReminder() {
@@ -903,7 +942,7 @@
         }
 
         function addExpenseEntry() {
-            const reason = document.getElementById('expenseReason').value.trim() || 'দোকান খরচ';
+            const reason = document.getElementById('expenseReason').value.trim() || 'দোকান খরচ / খচ্চাপাতি';
             let amount = parseFloat(document.getElementById('expenseAmount').value);
             const source = document.getElementById('expenseSource').value;
 
@@ -1029,21 +1068,30 @@
                 }
 
                 const netAdvance = Math.max(0, cumulativeAdvance - cumulativeReturn);
+                
                 const retainedKey = `salon_retained_${activeDateKey}_${st.id}`;
-                const retainedAmount = parseFloat(localStorage.getItem(retainedKey)) || 0;
+                let retainedAmount = parseFloat(localStorage.getItem(retainedKey));
+                if (isNaN(retainedAmount)) {
+                    let prevKeys = Object.keys(localStorage).filter(k => k.startsWith('salon_retained_') && k.endsWith(`_${st.id}`) && k < retainedKey).sort();
+                    if (prevKeys.length > 0) {
+                        retainedAmount = parseFloat(localStorage.getItem(prevKeys[prevKeys.length - 1])) || 0;
+                    } else {
+                        retainedAmount = 0;
+                    }
+                    localStorage.setItem(retainedKey, retainedAmount);
+                }
 
                 const totalCredit = cumulativeEarnings + retainedAmount;
                 const diff = totalCredit - netAdvance;
 
                 let payoutText = '';
                 if (diff >= 0) {
-                    payoutText = `<span class="text-amber-400 font-bold">${st.name} পাবে: ₹${diff}</span> <span class="text-[10px] text-slate-400 block">(মোট পাওনা: ₹${cumulativeEarnings} + জমা: ₹${retainedAmount} - অগ্রিম: ₹${netAdvance})</span>`;
+                    payoutText = `<span class="text-amber-400 font-bold">${st.name} পায়: ₹${diff}</span> <span class="text-[10px] text-slate-400 block">(পাওনা: ₹${cumulativeEarnings} + জমানো: ₹${retainedAmount} - অগ্রিম: ₹${netAdvance})</span>`;
                 } else {
                     const ownerGets = Math.abs(diff);
-                    payoutText = `<span class="text-rose-400 font-bold">মালিক পাবে: ₹${ownerGets}</span> <span class="text-[10px] text-slate-400 block">(মোট পাওনা: ₹${cumulativeEarnings} + জমা: ₹${retainedAmount} - অগ্রিম: ₹${netAdvance})</span>`;
+                    payoutText = `<span class="text-rose-400 font-bold">মালিক পায় (${st.name} থেকে): ₹${ownerGets}</span> <span class="text-[10px] text-slate-400 block">(পাওনা: ₹${cumulativeEarnings} + জমানো: ₹${retainedAmount} - অগ্রিম: ₹${netAdvance})</span>`;
                 }
 
-                // কারিগররা যেন শুধু দেখতে পায় (View-only), কোনো এডিট বা বদল করতে না পারে
                 const isAdmin = currentUser && currentUser.role === 'admin';
                 
                 const attSelect = isAdmin ? `
@@ -1124,6 +1172,7 @@
 
             const reqObj = {
                 id: 'req_' + Date.now(),
+                type: 'advance_request',
                 staffId: currentUser.id,
                 staffName: currentUser.name,
                 amount,
@@ -1149,55 +1198,75 @@
             if (!container) return;
             container.innerHTML = '';
             if (pendingRequests.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-400">কোনো নতুন অগ্রিম রিকোয়েস্ট নেই।</p>`;
+                container.innerHTML = `<p class="text-xs text-slate-400">কোনো নতুন রিকোয়েস্ট নেই।</p>`;
                 return;
             }
 
             pendingRequests.forEach(req => {
+                let descText = '';
+                if (req.type === 'drawer_expense_request') {
+                    descText = `<span class="text-amber-400 font-bold">${req.staffName}</span> ড্রয়ার খরচ চেয়েছেন: <strong class="text-rose-400">₹${req.amount}</strong> (${req.reason})`;
+                } else {
+                    descText = `<span class="text-amber-400 font-bold">${req.staffName}</span> অগ্রিম চেয়েছেন: <strong class="text-sky-400">₹${req.amount}</strong>`;
+                }
+
                 container.innerHTML += `
                     <div class="bg-slate-900 border border-sky-900/50 p-3 rounded-lg flex flex-wrap justify-between items-center gap-2 text-xs">
                         <div>
-                            <span class="font-bold text-amber-400">${req.staffName}</span> 
-                            <span class="text-slate-300">অগ্রিম চেয়েছেন: <strong class="text-sky-400">₹${req.amount}</strong></span>
+                            ${descText}
                             <span class="text-[10px] text-slate-500 block">তারিখ: ${req.date} (${req.time})</span>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="approveAdvanceRequest('${req.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1 rounded">কনফার্ম (এপ্রুভ)</button>
-                            <button onclick="rejectAdvanceRequest('${req.id}')" class="bg-rose-600 hover:bg-rose-700 text-white px-2 py-1 rounded">বাতিল</button>
+                            <button onclick="approveRequest('${req.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1 rounded">কনফার্ম (এপ্রুভ)</button>
+                            <button onclick="rejectRequest('${req.id}')" class="bg-rose-600 hover:bg-rose-700 text-white px-2 py-1 rounded">বাতিল</button>
                         </div>
                     </div>
                 `;
             });
         }
 
-        function approveAdvanceRequest(id) {
+        // আপডেট করা ফাংশন: এপ্রুভ করলে ড্রয়ার খরচ হলে 'expense' হিসেবে কাটবে (কোনো ধার হবে না)
+        function approveRequest(id) {
             const req = pendingRequests.find(r => r.id === id);
             if (!req) return;
             
-            const newAdv = {
-                id: 'rec_' + Date.now(),
-                type: 'advance',
-                staffId: req.staffId,
-                amount: req.amount,
-                source: req.source,
-                time: req.time
-            };
+            let newRec = {};
+            if (req.type === 'drawer_expense_request') {
+                newRec = {
+                    id: 'rec_' + Date.now(),
+                    type: 'expense',
+                    reason: `${req.staffName}-এর ড্রয়ার খরচ: ${req.reason}`,
+                    amount: req.amount,
+                    source: req.source,
+                    staffId: req.staffId,
+                    time: req.time
+                };
+            } else {
+                newRec = {
+                    id: 'rec_' + Date.now(),
+                    type: 'advance',
+                    staffId: req.staffId,
+                    amount: req.amount,
+                    source: req.source,
+                    time: req.time
+                };
+            }
             
-            todayEntries.push(newAdv);
+            todayEntries.push(newRec);
             localStorage.setItem('salon_records_' + activeDateKey, JSON.stringify(todayEntries));
             
             if (db) {
-                db.ref(`records/${activeDateKey}/${newAdv.id}`).set(newAdv);
+                db.ref(`records/${activeDateKey}/${newRec.id}`).set(newRec);
                 db.ref(`advance_requests/${id}`).remove();
             }
             
             pendingRequests = pendingRequests.filter(r => r.id !== id);
             renderPendingRequests();
             calculateAndRenderAll();
-            alert('অগ্রিম রিকোয়েস্ট সফলভাবে এপ্রুভ করা হয়েছে!');
+            alert('রিকোয়েস্ট সফলভাবে এপ্রুভ হয়েছে এবং ড্রয়ারের ক্যাশ থেকে সঠিক খরচ কাটা হয়েছে (কোনো ধার হয়নি)!');
         }
 
-        function rejectAdvanceRequest(id) {
+        function rejectRequest(id) {
             if (db) db.ref(`advance_requests/${id}`).remove();
             pendingRequests = pendingRequests.filter(r => r.id !== id);
             renderPendingRequests();
@@ -1292,7 +1361,15 @@
                 let staffObj = localStaffList.find(s => s.id === item.staffId);
                 let staffNameStr = staffObj ? staffObj.name : 'অজানা';
                 let descText = item.service || item.reason || 'অগ্রিম (খোরচাপাতি)';
+                let sourceOrMethod = item.method || item.source || '-';
                 
+                if (item.source && item.source.startsWith('drawer_')) {
+                    let dStaffId = item.source.replace('drawer_', '');
+                    let dStaffObj = localStaffList.find(s => s.id === dStaffId);
+                    let dName = dStaffObj ? dStaffObj.name : 'ড্রয়ার';
+                    sourceOrMethod = `${dName}-এর ড্রয়ার থেকে কাটা`;
+                }
+
                 if (item.type === 'advance') {
                     descText = `<span class="text-amber-400 font-bold">${staffNameStr}</span> - অগ্রিম (খোরচাপাতি)`;
                 } else if (item.type === 'advance_return') {
@@ -1300,7 +1377,7 @@
                 } else if (item.type === 'service') {
                     descText = `<span class="text-sky-400 font-bold">${staffNameStr}</span>: ${descText}`;
                 } else {
-                    descText = `খরচ: ${descText}`;
+                    descText = `খচ্চাপাতি / খরচ: ${descText}`;
                 }
 
                 tbody.innerHTML += `
@@ -1308,7 +1385,7 @@
                         <td class="p-2 text-slate-400">${item.time}</td>
                         <td class="p-2">${item.type}</td>
                         <td class="p-2 text-slate-200">${descText}</td>
-                        <td class="p-2 text-slate-400">${item.method || item.source || '-'}</td>
+                        <td class="p-2 text-slate-400">${sourceOrMethod}</td>
                         <td class="p-2 text-right font-bold">₹${item.amount}</td>
                         ${actionCell}
                     </tr>
@@ -1408,8 +1485,23 @@
                 if (st.type === 'daily_50') {
                     totalStaffPayouts += Math.round(wSum * 0.5);
                 } else {
-                    let multiplier = (selectedMonth !== 'all') ? 1 : 12;
-                    totalStaffPayouts += (st.salary || 4000) * multiplier;
+                    let monthlyBase = st.salary || 4000;
+                    if (selectedMonth !== 'all') {
+                        totalStaffPayouts += monthlyBase;
+                    } else {
+                        let staffActiveMonths = new Set();
+                        recordKeys.forEach(rk => {
+                            let dk = rk.replace('salon_records_', '');
+                            let dp = dk.split('-');
+                            let dy = dp[0];
+                            let dm = dp[1];
+                            if (selectedYear === 'all' || dy === selectedYear) {
+                                staffActiveMonths.add(`${dy}-${dm}`);
+                            }
+                        });
+                        let activeCount = Math.max(1, staffActiveMonths.size);
+                        totalStaffPayouts += monthlyBase * activeCount;
+                    }
                 }
             });
 
@@ -1454,19 +1546,19 @@
                         <strong class="text-amber-400 text-lg">₹${totalCollection}</strong>
                     </div>
                     <div class="bg-slate-900 p-3 rounded-lg border border-slate-700">
-                        <span class="text-slate-400 block">মোট খরচ (Expenses)</span>
+                        <span class="text-slate-400 block">মোট খরচ / খচ্চাপাতি (Expenses)</span>
                         <strong class="text-rose-400 text-lg">₹${totalExpense}</strong>
                     </div>
                 </div>
 
                 <div class="bg-slate-900 border border-amber-500/40 p-4 rounded-xl mb-4 space-y-2">
-                    <h4 class="font-bold text-amber-400 flex items-center gap-1.5"><i class="fa-solid fa-chart-pie"></i> লাভ-ক্ষতি স্টেটমেন্ট (P&L Statement)</h4>
+                    <h4 class="font-bold text-amber-400 flex items-center gap-1.5"><i class="fa-solid fa-chart-pie"></i> লাভ-ক্ষতি স্টেটমেন্ট (Net Profit / Loss Statement)</h4>
                     <div class="flex justify-between text-xs text-slate-300 border-b border-slate-800 pb-1.5">
                         <span>মোট আয় / কালেকশন:</span>
                         <span class="font-bold text-emerald-400">+₹${totalCollection}</span>
                     </div>
                     <div class="flex justify-between text-xs text-slate-300 border-b border-slate-800 pb-1.5">
-                        <span>মাইনাস: দোকান খরচ:</span>
+                        <span>মাইনাস: দোকান খরচ / খচ্চাপাতি:</span>
                         <span class="font-bold text-rose-400">-₹${totalExpense}</span>
                     </div>
                     <div class="flex justify-between text-xs text-slate-300 border-b border-slate-800 pb-1.5">
@@ -1474,12 +1566,12 @@
                         <span class="font-bold text-rose-400">-₹${totalStaffPayouts}</span>
                     </div>
                     <div class="flex justify-between text-sm pt-1">
-                        <span class="font-bold text-amber-300">মালিকের নিট লাভ (Net Profit):</span>
+                        <span class="font-bold text-amber-300">দোকানের নিট লাভ বা ক্ষতি (Net Profit/Loss):</span>
                         <span class="font-black ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}">₹${netProfit}</span>
                     </div>
                 </div>
 
-                <h4 class="font-bold text-slate-200 mt-3 mb-1">কারিগরদের কাজের পরিমাণ, অগ্রিম ও নিট পাওনা / মালিক পাবে:</h4>
+                <h4 class="font-bold text-slate-200 mt-3 mb-1">কারিগরওয়ারী কাজের পরিমাণ, অগ্রিম ও নির্দিষ্ট নামভিত্তিক পাওনা (কে পাচ্ছে):</h4>
                 <div class="space-y-2 mb-4">
             `;
 
@@ -1493,8 +1585,19 @@
                 if (st.type === 'daily_50') {
                     rawEarn = Math.round(wSum * 0.5);
                 } else {
-                    let multiplier = (selectedMonth !== 'all') ? 1 : 12;
-                    rawEarn = (st.salary || 4000) * multiplier;
+                    let staffActiveMonthsCount = 1;
+                    if (selectedMonth === 'all') {
+                        let activeM = new Set();
+                        recordKeys.forEach(rk => {
+                            let dk = rk.replace('salon_records_', '');
+                            let dp = dk.split('-');
+                            if (selectedYear === 'all' || dp[0] === selectedYear) {
+                                activeM.add(`${dp[0]}-${dp[1]}`);
+                            }
+                        });
+                        staffActiveMonthsCount = Math.max(1, activeM.size);
+                    }
+                    rawEarn = (st.salary || 4000) * staffActiveMonthsCount;
                 }
 
                 let diff = rawEarn - netAdv;
@@ -1502,7 +1605,7 @@
                 if (diff >= 0) {
                     statusText = `<span class="text-emerald-400 font-bold block">${st.name} পাবে: ₹${diff}</span>`;
                 } else {
-                    statusText = `<span class="text-rose-400 font-bold block">মালিক পাবে: ₹${Math.abs(diff)}</span>`;
+                    statusText = `<span class="text-rose-400 font-bold block">মালিক পাবে (${st.name} থেকে): ₹${Math.abs(diff)}</span>`;
                 }
 
                 html += `
@@ -1521,7 +1624,7 @@
             });
 
             html += `</div>
-                <h4 class="font-bold text-slate-200 mt-2">তারিখ অনুযায়ী বিগত হিসাবসমূহ:</h4>
+                <h4 class="font-bold text-slate-200 mt-2">তারিখ অনুযায়ী লাইভ ও বিগত হিসাবসমূহ:</h4>
                 <div class="space-y-1.5 max-h-40 overflow-y-auto">
             `;
 
@@ -1534,7 +1637,7 @@
                     html += `
                         <div class="bg-slate-900 p-2.5 rounded flex justify-between items-center text-xs border border-slate-700">
                             <div><strong class="text-amber-300">${dt}</strong> <span class="text-[10px] text-slate-400">(${d.count}টি এন্ট্রি)</span></div>
-                            <div>লেকশন: <strong class="text-emerald-400">₹${d.coll}</strong> | খরচ: <strong class="text-rose-400">₹${d.exp}</strong></div>
+                            <div>লেকশন: <strong class="text-emerald-400">₹${d.coll}</strong> | খরচ/খচ্চা: <strong class="text-rose-400">₹${d.exp}</strong></div>
                         </div>
                     `;
                 });
